@@ -81,8 +81,6 @@ namespace AI.Goap
                 IGoapAction action = node.action;
                 openList.Remove(action);
 
-                Debug.Log($"LOOK ACTION {action.Name}");
-
                 if (worldState.Overlaps(action.Conditions))
                 {
                     this.CreatePlan(node, plan);
@@ -107,29 +105,52 @@ namespace AI.Goap
             Dictionary<IGoapAction, Node> openList
         )
         {
+            int satisfied = 0;
+
             for (int i = 0, count = actions.Length; i < count; i++)
             {
                 IGoapAction action = actions[i];
 
-                if (!this.Satisfy(goalState, action.Effects, worldState))
-                    continue;
+                if (this.IsActionSatisfied(goalState, action.Effects, worldState))
+                {
+                    int cost = action.Cost;
+                    int heuristic = this.GetHeuristic(worldState, action.Conditions);
+                    int weight = cost + heuristic;
 
-                int cost = action.Cost;
-                int heuristic = this.GetHeuristic(worldState, action.Conditions);
+                    Node node = new Node
+                    {
+                        action = action,
+                        previous = null,
+                        cost = cost,
+                        heuristic = heuristic,
+                        weight = weight
+                    };
+
+                    openList.Add(action, node);
+                    satisfied++;
+                }
+            }
+
+            if (satisfied == 0 &&
+                this.CreateSatisfiedAction(goalState, worldState, actions, out SequenceAction sequence))
+            {
+                int cost = sequence.Cost;
+                int heuristic = this.GetHeuristic(worldState, sequence.Conditions);
                 int weight = cost + heuristic;
 
                 Node node = new Node
                 {
-                    action = action,
+                    action = sequence,
                     previous = null,
                     cost = cost,
                     heuristic = heuristic,
                     weight = weight
                 };
 
-                openList.Add(action, node);
+                openList.Add(sequence, node);
             }
         }
+
 
         internal void VisitAction(
             in Node visitingNode,
@@ -149,7 +170,7 @@ namespace AI.Goap
                 if (closedList.Contains(action))
                     continue;
 
-                if (!this.Satisfy(visitingConditions, action.Effects, worldState))
+                if (!this.IsActionSatisfied(visitingConditions, action.Effects, worldState))
                     continue;
 
                 if (openList.TryGetValue(action, out Node actionNode))
@@ -204,7 +225,13 @@ namespace AI.Goap
         {
             while (end != null)
             {
-                plan.Add(end.action);
+                IGoapAction action = end.action;
+
+                if (action is SequenceAction sequence)
+                    plan.AddRange(sequence.Actions);
+                else
+                    plan.Add(action);
+
                 end = end.previous;
             }
         }
@@ -230,7 +257,7 @@ namespace AI.Goap
             return result;
         }
 
-        internal bool Satisfy(in LocalState conditions, in LocalState effects, in WorldState worldState)
+        internal bool IsActionSatisfied(in LocalState conditions, in LocalState effects, in WorldState worldState)
         {
             for (int i = 0, count = conditions.Count; i < count; i++)
             {
@@ -240,6 +267,52 @@ namespace AI.Goap
             }
 
             return true;
+        }
+
+        internal bool CreateSatisfiedAction(
+            in LocalState conditions,
+            in WorldState worldState,
+            in IGoapAction[] actions,
+            out SequenceAction result
+        )
+        {
+
+            result = default;
+            List<IGoapAction> sequence = new List<IGoapAction>();
+
+            for (int i = 0, conditionCount = conditions.Count; i < conditionCount; i++)
+            {
+                KeyValuePair<string, bool> condition = conditions[i];
+                if (worldState.Overlaps(condition))
+                    continue;
+
+                if (!this.IsAnyActionSatisfied(condition, actions, out IGoapAction action))
+                    return false;
+
+                sequence.Add(action);
+            }
+
+            result = new SequenceAction(null, sequence);
+            return true;
+        }
+
+        private bool IsAnyActionSatisfied(
+            in KeyValuePair<string,bool> condition,
+            in IGoapAction[] actions,
+            out IGoapAction result)
+        {
+
+            foreach (IGoapAction action in actions)
+            {
+                if (action.Effects.Overlaps(condition))
+                {
+                    result = action;
+                    return true;
+                }
+            }
+
+            result = default;
+            return false;
         }
 
         internal sealed class Node
