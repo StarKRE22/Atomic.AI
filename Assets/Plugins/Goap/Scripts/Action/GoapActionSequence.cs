@@ -4,7 +4,7 @@ using UnityEngine.Pool;
 
 namespace AI.Goap
 {
-    public sealed class SequenceAction : IGoapAction
+    public sealed class GoapActionSequence : IGoapAction
     {
         private readonly string name;
         private readonly LocalState effects;
@@ -56,26 +56,26 @@ namespace AI.Goap
             }
         }
 
-        public SequenceAction(in string name, in IReadOnlyList<IGoapAction> actions)
+        public GoapActionSequence(in string name, in IReadOnlyList<IGoapAction> actions)
         {
+            HashSet<KeyValuePair<string, bool>> effects = HashSetPool<KeyValuePair<string, bool>>.Get();
+            HashSet<KeyValuePair<string, bool>> conditions = HashSetPool<KeyValuePair<string, bool>>.Get();
+
             this.name = name;
             this.actions = new List<IGoapAction>();
-
-            List<KeyValuePair<string, bool>> effects = ListPool<KeyValuePair<string, bool>>.Get();
-            List<KeyValuePair<string, bool>> conditions = ListPool<KeyValuePair<string, bool>>.Get();
-
+            
             foreach (IGoapAction action in actions)
             {
                 this.actions.Add(action);
-                effects.AddRange(action.Effects);
-                conditions.AddRange(action.Conditions);
+                effects.UnionWith(action.Effects);
+                conditions.UnionWith(action.Conditions);
             }
 
             this.effects = new LocalState(effects);
             this.conditions = new LocalState(conditions);
 
-            ListPool<KeyValuePair<string, bool>>.Release(effects);
-            ListPool<KeyValuePair<string, bool>>.Release(conditions);
+            HashSetPool<KeyValuePair<string, bool>>.Release(effects);
+            HashSetPool<KeyValuePair<string, bool>>.Release(conditions);
         }
 
         public IGoapAction.Result Run(in float deltaTime)
