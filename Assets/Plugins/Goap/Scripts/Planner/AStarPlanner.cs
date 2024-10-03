@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 using UnityEngine.Pool;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -12,7 +14,6 @@ using UnityEngine.Pool;
 
 namespace AI.Goap
 {
-    //TODO: Сделать вложенный A*
     public sealed class AStarPlanner : IGoapPlanner
     {
         internal readonly int heuristicPoints;
@@ -64,12 +65,15 @@ namespace AI.Goap
             plan.Clear();
 
             LocalState goalState = goal.Result;
+            if (!worldState.OverlapsKeys(goalState))
+                return false;
+
             if (worldState.Overlaps(goalState))
                 return true;
 
             if (actions.Length == 0)
                 return false;
-
+            
             var openList = DictionaryPool<IGoapAction, Node>.Get();
             var closedList = HashSetPool<IGoapAction>.Get();
             var complete = false;
@@ -227,6 +231,7 @@ namespace AI.Goap
             foreach (Node node in openList.Values)
             {
                 int weight = node.weight;
+                Debug.Log($"OPEN NODE {node.action.Name}: {node.weight}");
                 if (weight < minWeight)
                 {
                     result = node;

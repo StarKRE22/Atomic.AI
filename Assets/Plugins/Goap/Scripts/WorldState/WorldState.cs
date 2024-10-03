@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+
 // ReSharper disable UseDeconstruction
 
 namespace AI.Goap
@@ -26,15 +27,28 @@ namespace AI.Goap
 
         public bool Overlaps(LocalState other)
         {
-            foreach ((string oKey, bool oValue) in other)
+            for (int i = 0, count = other.Count; i < count; i++)
             {
-                if (!this.pairs.TryGetValue(oKey, out bool value))
+                KeyValuePair<string, bool> pair = other[i];
+                if (!this.pairs.TryGetValue(pair.Key, out bool value))
                     return false;
-        
-                if (value != oValue)
+
+                if (value != pair.Value)
                     return false;
             }
-        
+
+            return true;
+        }
+
+        public bool OverlapsKeys(LocalState other)
+        {
+            for (int i = 0, count = other.Count; i < count; i++)
+            {
+                KeyValuePair<string, bool> pair = other[i];
+                if (!this.pairs.ContainsKey(pair.Key))
+                    return false;
+            }
+
             return true;
         }
 

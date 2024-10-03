@@ -61,7 +61,106 @@ namespace AI.Goap
 
         private static IEnumerable<TestCaseData> FailedPlanCases()
         {
-            yield return new TestCaseData(
+            yield return ActionArrayEmptyCase();
+            yield return NoCompatitiveActionsCase();
+            yield return MeleeCombatNoPlanCase();
+            yield return NoEnemyAliveStateCase();
+            yield return GoalStateNotReachableCase();
+        }
+
+        private static TestCaseData NoEnemyAliveStateCase()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        NearEnemy(false),
+                        AtEnemy(false),
+                        HasAmmo(true)
+                    ),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 1, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 5,
+                            onUpdate: null
+                        ),
+
+                        new GoapAction(
+                            "RangeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
+                            isValid: () => true,
+                            cost: () => 1, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveNearEnemy",
+                            effects: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 2,
+                            onUpdate: null
+                        ),
+                    }
+                )
+                .SetName("No Enemy Alive State")
+                .SetCategory("Easy")
+                .SetDescription("Planner should't make a plan because world state hasn't property");
+        }
+
+        private static TestCaseData GoalStateNotReachableCase()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        Injured(true)
+                    ),
+                    new GoapGoal(
+                        "DestroyEnemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "SelfTreatment",
+                            effects: new LocalState(Injured(false)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        )
+                    })
+                .SetName("Goal State Not Reachable");
+        }
+
+        private static TestCaseData ActionArrayEmptyCase()
+        {
+            return new TestCaseData(
                     new WorldState(
                         EnemyAlive(true)
                     ),
@@ -74,8 +173,11 @@ namespace AI.Goap
                     Array.Empty<IGoapAction>()
                 )
                 .SetName("Action array is empty");
+        }
 
-            yield return new TestCaseData(
+        private static TestCaseData NoCompatitiveActionsCase()
+        {
+            return new TestCaseData(
                     new WorldState(
                         Injured(true),
                         EnemyAlive(true)
@@ -109,6 +211,47 @@ namespace AI.Goap
                 .SetName("Not compatitive actions")
                 .SetCategory("Primitive");
         }
+
+        private static TestCaseData MeleeCombatNoPlanCase()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true),
+                        NearEnemy(false),
+                        AtEnemy(false),
+                        HasAmmo(true)
+                    ),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 1, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveNearEnemy",
+                            effects: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 2,
+                            onUpdate: null
+                        ),
+                    }
+                )
+                .SetName("Melee Combat")
+                .SetCategory("Easy")
+                .SetDescription("Planner should not found plan because there aren't MoveAtEnemy action");
+        }
+
 
         [TestCaseSource(nameof(SuccessfulPlanCases))]
         public void SucessfulPlan(
@@ -145,11 +288,50 @@ namespace AI.Goap
             yield return CombatBranchesHasEqualsCostsCase();
             yield return CompositeGoalPrimitive();
             yield return RangeCombatWithAmmoCase();
+            yield return OppositeGoalPrimitiveCase();
+        }
+
+        private static TestCaseData OppositeGoalPrimitiveCase()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        Injured(true)
+                    ),
+                    new GoapGoal(
+                        "Opposite",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: new[] {Injured(false), Injured(true)}
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "SelfTreatment",
+                            effects: new LocalState(Injured(false)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 5,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "SelfAbusing",
+                            effects: new LocalState(Injured(true)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 5,
+                            onUpdate: null
+                        ),
+                    },
+                    new[] {"SelfTreatment"}
+                )
+                .SetName("Opposite Goal")
+                .SetCategory("Primitive")
+                .SetDescription("Planner should only treat himself because injured=false is already reached!");
         }
 
         private static TestCaseData RangeCombatWithAmmoCase()
         {
-             return new TestCaseData(
+            return new TestCaseData(
                     new WorldState(
                         EnemyAlive(true),
                         NearEnemy(false),
@@ -488,9 +670,6 @@ namespace AI.Goap
                 .SetDescription("When all actions not satisfied goal state then create composite action");
         }
 
-        
-        
-        
 
         //TODO: WITH AMMO RANGE BRANCH
         // new GoapAction(
