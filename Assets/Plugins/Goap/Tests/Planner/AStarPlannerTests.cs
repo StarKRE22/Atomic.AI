@@ -373,6 +373,8 @@ namespace AI.Goap
                 .SetCategory("Easy")
                 .SetDescription("When there is several branch with equals costs, planner should select first branch");
         }
+        
+        
 
         //TODO: INLINE STATE
 

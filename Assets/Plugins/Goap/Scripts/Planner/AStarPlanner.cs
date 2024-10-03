@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.Pool;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
-
 // ReSharper disable UseDeconstruction
 
 [assembly: InternalsVisibleTo("Goap.Tests")]
@@ -112,7 +111,7 @@ namespace AI.Goap
             {
                 IGoapAction action = actions[i];
 
-                if (!this.OverlapsConditions(goalState, action.Effects, worldState))
+                if (!this.Satisfy(goalState, action.Effects, worldState))
                     continue;
 
                 int cost = action.Cost;
@@ -150,7 +149,7 @@ namespace AI.Goap
                 if (closedList.Contains(action))
                     continue;
 
-                if (!this.OverlapsConditions(visitingConditions, action.Effects, worldState))
+                if (!this.Satisfy(visitingConditions, action.Effects, worldState))
                     continue;
 
                 if (openList.TryGetValue(action, out Node actionNode))
@@ -231,7 +230,7 @@ namespace AI.Goap
             return result;
         }
 
-        internal bool OverlapsConditions(in LocalState conditions, in LocalState effects, in WorldState worldState)
+        internal bool Satisfy(in LocalState conditions, in LocalState effects, in WorldState worldState)
         {
             for (int i = 0, count = conditions.Count; i < count; i++)
             {
