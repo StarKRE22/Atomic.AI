@@ -50,9 +50,6 @@ namespace AI.Goap
             if (actions == null)
                 throw new ArgumentNullException(nameof(actions));
 
-            if (actions.Length == 0)
-                return false;
-
             return this.PlanInternal(worldState, goal, actions, plan);
         }
 
@@ -67,9 +64,10 @@ namespace AI.Goap
 
             LocalState goalState = goal.Result;
             if (worldState.Overlaps(goalState))
-            {
                 return true;
-            }
+            
+            if (actions.Length == 0)
+                return false;
 
             bool complete = false;
             

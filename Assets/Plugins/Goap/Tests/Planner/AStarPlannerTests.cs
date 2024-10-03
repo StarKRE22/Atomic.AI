@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using static AI.Goap.Substitutes;
 
+// ReSharper disable ArgumentsStyleAnonymousFunction
+
 // ReSharper disable ArgumentsStyleOther
 // ReSharper disable ArgumentsStyleNamedExpression
 
@@ -21,151 +23,229 @@ namespace AI.Goap
             Assert.AreEqual(int.MaxValue, planner.heuristicUndefined);
         }
 
-        [Test]
-        public void WhenWorldStateArgIsNullThenThrowException()
+        [TestCaseSource(nameof(ArgumentNullExceptionCases))]
+        public void ArgumentNullException(WorldState worldState, IGoapGoal goal, IGoapAction[] actions)
         {
             //Arrange:
-            IGoapPlanner planner = new AStarPlanner();
+            AStarPlanner planner = new AStarPlanner();
 
             //Assert:
-            Assert.Catch<ArgumentNullException>(() =>
-            {
-                planner.Plan(
-                    worldState: null,
-                    DestroyEnemyGoal,
-                    new[] {MoveAtEnemyAction},
-                    out _
-                );
-            }, "worldState");
+            Assert.Catch<ArgumentNullException>(() => { planner.Plan(worldState, goal, actions, out _); });
         }
 
-        [Test]
-        public void WhenGoalArgIsNullThenThrowException()
+        private static IEnumerable<TestCaseData> ArgumentNullExceptionCases()
         {
-            //Arrange:
-            IGoapPlanner planner = new AStarPlanner();
+            yield return new TestCaseData(null, GoalStub, new[] {ActionStub})
+                .SetName("World State");
 
-            //Assert:
-            Assert.Catch<ArgumentNullException>(() =>
-            {
-                planner.Plan(
-                    new WorldState(),
-                    null,
-                    new[] {MoveAtEnemyAction},
-                    out _
-                );
-            }, "goal");
+            yield return new TestCaseData(new WorldState(), null, new[] {ActionStub})
+                .SetName("Goal");
+
+            yield return new TestCaseData(new WorldState(), GoalStub, null)
+                .SetName("Actions");
         }
 
-        [Test]
-        public void WhenActionsArgIsNullThenThrowException()
-        {
-            //Arrange:
-            IGoapPlanner planner = new AStarPlanner();
-
-            //Assert:
-            Assert.Catch<ArgumentNullException>(() =>
-            {
-                planner.Plan(
-                    new WorldState(),
-                    DestroyEnemyGoal,
-                    null,
-                    out _
-                );
-            }, "actions");
-        }
-
-        [Test]
-        public void WhenActionCollectionIsEmptyThenReturnFalse()
+        [TestCaseSource(nameof(FailedPlanCases))]
+        public void FailedPlan(WorldState worldState, IGoapGoal goal, IGoapAction[] actions)
         {
             //Arrange:
             var planner = new AStarPlanner();
 
             //Act:
-            bool success = planner.Plan(
-                worldState: new WorldState(),
-                goal: DestroyEnemyGoal,
-                actions: Array.Empty<IGoapAction>(),
-                plan: out _
-            );
-            
-            //Assert:
-            Assert.IsFalse(success);
-        }
-
-        [Test]
-        public void WhenGoalStateEqualsWorldStateThenReturnTrue()
-        {
-            //Arrange:
-            AStarPlanner planner = new AStarPlanner();
-
-            //Act:
-            bool success = planner.Plan(
-                worldState: new WorldState(EnemyAlive(false)),
-                goal: DestroyEnemyGoal,
-                actions: new[]{MoveAtEnemyAction},
-                plan: out List<IGoapAction> plan
-            );
-
-            //Assert:
-            Assert.IsTrue(success);
-            Assert.IsNotNull(plan);
-            Assert.AreEqual(0, plan.Count);
-        }
-
-        [Test]
-        public void WhenCompatitiveActionsAreAbsent()
-        {
-            //Arrange:
-            AStarPlanner planner = new AStarPlanner();
-
-            //Act:
-            bool success = planner.Plan(
-                worldState: new WorldState(Injured(true), EnemyAlive(true)),
-                goal: DestroyEnemyGoal,
-                actions: new[]{SelfTreatmentAction, MoveAtEnemyAction},
-                plan: out List<IGoapAction> plan
-            );
+            bool success = planner.Plan(worldState, goal, actions, out List<IGoapAction> plan);
 
             //Assert:
             Assert.IsFalse(success);
             Assert.AreEqual(0, plan.Count);
         }
-        
-        [Test]
-        public void PrimitivePlan()
+
+        private static IEnumerable<TestCaseData> FailedPlanCases()
+        {
+            yield return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true)
+                    ),
+                    new GoapGoal(
+                        "DestroyEnemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    Array.Empty<IGoapAction>()
+                )
+                .SetName("Action array is empty");
+
+            yield return new TestCaseData(
+                    new WorldState(
+                        Injured(true),
+                        EnemyAlive(true)
+                    ),
+                    new GoapGoal(
+                        "DestroyEnemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "SelfTreatment",
+                            effects: new LocalState(Injured(false)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        )
+                    }
+                )
+                .SetName("Not compatitive actions")
+                .SetCategory("Primitive");
+        }
+
+        [TestCaseSource(nameof(SuccessfulPlanCases))]
+        public void SucessfulPlan(
+            WorldState worldState,
+            IGoapGoal goal,
+            IGoapAction[] actions,
+            string[] expectedPlan
+        )
         {
             //Arrange:
             AStarPlanner planner = new AStarPlanner();
 
             //Act:
-            bool success = planner.Plan(
-                worldState: new WorldState(Injured(true)),
-                goal: HealingGoal,
-                actions: new[]{SelfTreatmentAction},
-                plan: out List<IGoapAction> plan
+            bool success = planner.Plan(worldState, goal, actions,
+                plan: out List<IGoapAction> actualPlan
             );
 
             //Assert:
             Assert.IsTrue(success);
-            Assert.AreEqual(1, plan.Count);
-            Assert.AreEqual(new List<IGoapAction>{SelfTreatmentAction}, plan);
+
+            int count = expectedPlan.Length;
+            Assert.AreEqual(count, actualPlan.Count);
+
+            for (int i = 0; i < count; i++)
+            {
+                Assert.AreEqual(expectedPlan[i], actualPlan[i].Name);
+            }
         }
 
+        private static IEnumerable<TestCaseData> SuccessfulPlanCases()
+        {
+            //Test:
+            yield return new TestCaseData(
+                    new WorldState(EnemyAlive(false)),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    Array.Empty<IGoapAction>(),
+                    Array.Empty<string>()
+                )
+                .SetName("Goal state equals world state")
+                .SetDescription("Even if the action list is empty, then first check for world and goal states");
 
-      
-        
+            //Test:
+            yield return new TestCaseData(
+                    new WorldState(Injured(true)),
+                    HealingGoal,
+                    new[]
+                    {
+                        new GoapAction(
+                            "SelfTreatment",
+                            effects: new LocalState(Injured(false)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        )
+                    },
+                    new[] {"SelfTreatment"}
+                )
+                .SetName("Healing plan")
+                .SetCategory("Primitive");
+
+            //Test:
+            yield return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true),
+                        NearEnemy(false),
+                        AtEnemy(false),
+                        Injured(true),
+                        HasAmmo(true)
+                    ),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 7,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 2, //heuristic: 1
+                            onUpdate: null
+                        ),
+
+                        new GoapAction(
+                            "MoveNearEnemy",
+                            effects: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 5,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "RangeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(NearEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 4, //heuristic: 2
+                            onUpdate: null
+                        )
+                    },
+                    new[] {"MoveAtEnemy", "MeleeCombat"}
+                )
+                .SetName("Melee plan")
+                .SetCategory("Easy")
+                .SetDescription("Planner should select melee branch because melee cost 10, but range — 11");
+        }
+
+        //TODO: WITH AMMO RANGE BRANCH
+
         // [Test]
         // public void MeleeCombatPlanTest()
         // {
-        //     //Arrange:
-        //     var worldState = new FactState(
-        //         new Fact("enemyExists", true),
-        //         new Fact("nearEnemy", false),
-        //         new Fact("atEnemy", false),
-        //         new Fact("isInjured", true),
-        //         new Fact("hasAmmo", true)
-        //     );
         //
         //     var goal = new FactState(
         //         new Fact("enemyExists", false)
