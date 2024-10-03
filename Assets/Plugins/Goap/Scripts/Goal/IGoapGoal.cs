@@ -6,8 +6,8 @@ namespace AI.Goap
     {
         string Name { get; }
         
+        IGoapState Result { get; }
         bool IsValid { get; }
         int Priority { get; }
-        IReadOnlyDictionary<string, bool> Effects { get; }
     }
 }

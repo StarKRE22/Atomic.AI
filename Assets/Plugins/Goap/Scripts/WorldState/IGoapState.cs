@@ -2,8 +2,10 @@ using System.Collections.Generic;
 
 namespace AI.Goap
 {
-    public interface IGoapState
+    public interface IGoapState : IEnumerable<KeyValuePair<string, bool>>
     {
-        IReadOnlyDictionary<string, bool> Current { get; }
+        bool TryGetValue(string key, out bool value);
+        
+        bool Equals(IGoapState other);
     }
 }

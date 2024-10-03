@@ -1,19 +1,21 @@
 using System;
-using System.Collections.Generic;
 using static AI.Goap.IGoapAction;
 
 namespace AI.Goap
 {
     public sealed class GoapAction : IGoapAction
     {
-        public IReadOnlyDictionary<string, bool> Effects => _effects;
-        public IReadOnlyDictionary<string, bool> Conditions => _conditions;
+        public IGoapState Effects => _effects;
+        public IGoapState Conditions => _conditions;
+
+        public string Name => _name;
         public bool IsValid => _isValid.Invoke();
         public int Cost => _cost.Invoke();
         public bool IsRunning => isRunning;
 
-        private readonly IReadOnlyDictionary<string, bool> _effects;
-        private readonly IReadOnlyDictionary<string, bool> _conditions;
+        private readonly string _name;
+        private readonly IGoapState _effects;
+        private readonly IGoapState _conditions;
         private readonly Func<bool> _isValid;
         private readonly Func<int> _cost;
 
@@ -25,8 +27,9 @@ namespace AI.Goap
         private bool isRunning;
 
         public GoapAction(
-            in IReadOnlyDictionary<string, bool> effects,
-            in IReadOnlyDictionary<string, bool> conditions,
+            in string name,
+            in IGoapState effects,
+            in IGoapState conditions,
             in Func<bool> isValid,
             in Func<int> cost,
             in Func<float, Result> onUpdate,
@@ -35,6 +38,7 @@ namespace AI.Goap
             in Action onCancel = null
         )
         {
+            _name = name;
             _effects = effects;
             _conditions = conditions;
             _isValid = isValid;

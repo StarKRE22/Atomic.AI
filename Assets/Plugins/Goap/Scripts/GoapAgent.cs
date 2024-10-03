@@ -8,11 +8,11 @@ namespace AI.Goap
         private readonly HashSet<IGoapAction> actions;
 
         private readonly IGoapPlanner _planner;
-        private readonly IGoapState _state;
+        private readonly WorldState _worldState;
 
         public GoapAgent(
             in IGoapPlanner planner,
-            in IGoapState state,
+            in WorldState worldState,
             in IEnumerable<IGoapGoal> goals = null,
             in IEnumerable<IGoapAction> actions = null
         )
@@ -21,7 +21,7 @@ namespace AI.Goap
             this.actions = actions != null ? new HashSet<IGoapAction>(actions) : new HashSet<IGoapAction>();
 
             _planner = planner;
-            _state = state;
+            _worldState = worldState;
         }
     }
 }

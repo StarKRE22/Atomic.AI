@@ -5,10 +5,10 @@ namespace AI.Goap
     public interface IGoapPlanner
     {
         bool Plan(
-            in IReadOnlyDictionary<string, bool> worldState,
+            in WorldState worldState,
             in IGoapGoal goal,
-            in IEnumerable<IGoapAction> actions,
-            out List<IGoapAction> plan
+            in ICollection<IGoapAction> actions,
+            out List<IGoapAction> plan //TODO: сделать без аллокаций!
         );
     }
 }

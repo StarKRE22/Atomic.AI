@@ -4,13 +4,15 @@ namespace AI.Goap
 {
     public interface IGoapAction
     {
-        IReadOnlyDictionary<string, bool> Effects { get; }
-        IReadOnlyDictionary<string, bool> Conditions { get; }
+        string Name { get; }
         
+        IGoapState Effects { get; }
+        IGoapState Conditions { get; }
+
         bool IsValid { get; }
         int Cost { get; }
         bool IsRunning { get; }
-
+        
         Result Run(in float deltaTime);
         bool Cancel();
         
