@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Pool;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -132,7 +131,7 @@ namespace AI.Goap
             }
 
             if (satisfied == 0 &&
-                this.CreateSatisfiedAction(goalState, worldState, actions, out SequenceAction sequence))
+                this.ResolveSatisfiedAction(goalState, worldState, actions, out SequenceAction sequence))
             {
                 int cost = sequence.Cost;
                 int heuristic = this.GetHeuristic(worldState, sequence.Conditions);
@@ -162,6 +161,8 @@ namespace AI.Goap
         {
             LocalState visitingConditions = visitingNode.action.Conditions;
             int visitingWeight = visitingNode.weight;
+
+            int satisfied = 0;
 
             for (int i = 0, count = actions.Length; i < count; i++)
             {
@@ -199,6 +200,27 @@ namespace AI.Goap
 
                     openList.Add(action, actionNode);
                 }
+
+                satisfied++;
+            }
+            
+            if (satisfied == 0 &&
+                this.ResolveSatisfiedAction(visitingConditions, worldState, actions, out SequenceAction sequence))
+            {
+                int cost = sequence.Cost;
+                int heuristic = this.GetHeuristic(worldState, sequence.Conditions);
+                int weight = cost + heuristic;
+
+                Node node = new Node
+                {
+                    action = sequence,
+                    previous = null,
+                    cost = cost,
+                    heuristic = heuristic,
+                    weight = weight
+                };
+
+                openList.Add(sequence, node);
             }
         }
 
@@ -269,14 +291,13 @@ namespace AI.Goap
             return true;
         }
 
-        internal bool CreateSatisfiedAction(
+        internal bool ResolveSatisfiedAction(
             in LocalState conditions,
             in WorldState worldState,
             in IGoapAction[] actions,
             out SequenceAction result
         )
-        {
-
+        {   
             result = default;
             List<IGoapAction> sequence = new List<IGoapAction>();
 

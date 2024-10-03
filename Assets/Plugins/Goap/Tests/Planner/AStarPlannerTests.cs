@@ -144,6 +144,76 @@ namespace AI.Goap
             yield return RangeCombatEasyCase();
             yield return CombatBranchesHasEqualsCostsCase();
             yield return CompositeGoalPrimitive();
+            yield return RangeCombatWithAmmoCase();
+        }
+
+        private static TestCaseData RangeCombatWithAmmoCase()
+        {
+             return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true),
+                        NearEnemy(false),
+                        AtEnemy(false),
+                        HasAmmo(false)
+                    ),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        //Melee branch: weight: 16
+                        new GoapAction(
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 10, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 5, //heuristic: 0
+                            onUpdate: null
+                        ),
+
+                        //Range branch: 9
+                        new GoapAction(
+                            "RangeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(HasAmmo(true), NearEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 1, //heuristic: 2
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveNearEnemy",
+                            effects: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 2, //heuristic: 0
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "PickUpAmmo",
+                            effects: new LocalState(HasAmmo(true)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 4, //heuristic: 0
+                            onUpdate: null
+                        ),
+                    },
+                    new[] {"PickUpAmmo", "MoveNearEnemy", "RangeCombat"}
+                )
+                .SetName("Range Combat With Ammo")
+                .SetCategory("Normal")
+                .SetDescription("Planner should resolve composite action for range branch because range cost 9, " +
+                                "but melee — 16");
         }
 
 
@@ -418,9 +488,9 @@ namespace AI.Goap
                 .SetDescription("When all actions not satisfied goal state then create composite action");
         }
 
-        //TODO: COMPOSITE GOAL WEAPONS
-
-        //TODO: INLINE STATE
+        
+        
+        
 
         //TODO: WITH AMMO RANGE BRANCH
         // new GoapAction(
