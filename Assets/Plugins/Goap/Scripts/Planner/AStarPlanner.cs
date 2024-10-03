@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 using UnityEngine.Pool;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -79,6 +81,8 @@ namespace AI.Goap
             {
                 IGoapAction action = node.action;
                 openList.Remove(action);
+
+                Debug.Log($"LOOK ACTION {action.Name}");
 
                 if (worldState.Overlaps(action.Conditions))
                 {
@@ -214,7 +218,7 @@ namespace AI.Goap
                 Node node = new Node
                 {
                     action = sequence,
-                    previous = null,
+                    previous = visitingNode,
                     cost = cost,
                     heuristic = heuristic,
                     weight = weight
@@ -256,6 +260,8 @@ namespace AI.Goap
 
                 end = end.previous;
             }
+
+            Debug.Log($"PLAN {string.Join(',', plan.Select(it => it.Name))}");
         }
 
         internal int GetHeuristic(in WorldState worldState, in LocalState localState)
@@ -313,7 +319,7 @@ namespace AI.Goap
                 sequence.Add(action);
             }
 
-            result = new SequenceAction(null, sequence);
+            result = new SequenceAction(string.Join(',', sequence.Select(it => it.Name)), sequence);
             return true;
         }
 
@@ -323,17 +329,24 @@ namespace AI.Goap
             out IGoapAction result)
         {
 
-            foreach (IGoapAction action in actions)
+            int minCost = int.MaxValue;
+            result = default;
+
+            for (int i = 0, count = actions.Length; i < count; i++)
             {
-                if (action.Effects.Overlaps(condition))
+                IGoapAction action = actions[i];
+                if (!action.Effects.Overlaps(condition))
+                    continue;
+
+                int cost = action.Cost;
+                if (cost < minCost)
                 {
+                    minCost = cost;
                     result = action;
-                    return true;
                 }
             }
 
-            result = default;
-            return false;
+            return result != null;
         }
 
         internal sealed class Node
