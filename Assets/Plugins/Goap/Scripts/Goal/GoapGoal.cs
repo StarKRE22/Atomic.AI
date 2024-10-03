@@ -8,12 +8,12 @@ namespace AI.Goap
         public string Name => _name;
         public bool IsValid => _isValid.Invoke();
         public int Priority => _priority.Invoke();
-        public IGoapState Result => _effects;
+        public LocalState Result => _effects;
 
         private readonly string _name;
         private readonly Func<bool> _isValid;
         private readonly Func<int> _priority;
-        private readonly IGoapState _effects;
+        private readonly LocalState _effects;
 
         public GoapGoal(
             in string name,
@@ -32,7 +32,7 @@ namespace AI.Goap
             in string name,
             in Func<bool> isValid,
             in Func<int> priority,
-            IGoapState effects
+            LocalState effects
         )
         {
             _name = name;

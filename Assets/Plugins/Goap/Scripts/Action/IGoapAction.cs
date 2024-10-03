@@ -6,8 +6,8 @@ namespace AI.Goap
     {
         string Name { get; }
         
-        IGoapState Effects { get; }
-        IGoapState Conditions { get; }
+        LocalState Effects { get; }
+        LocalState Conditions { get; }
 
         bool IsValid { get; }
         int Cost { get; }

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 
 namespace AI.Goap
 {
-    public sealed class LocalState : IGoapState
+    public sealed class LocalState : IEnumerable<KeyValuePair<string, bool>>
     {
+        public int Count => this.pairs.Length;
+        
         private readonly KeyValuePair<string, bool>[] pairs;
 
         public LocalState(params KeyValuePair<string, bool>[] pairs)
@@ -12,36 +14,47 @@ namespace AI.Goap
             this.pairs = pairs;
         }
 
-        public bool TryGetValue(string key, out bool value)
+        public KeyValuePair<string, bool> this[in int index]
         {
-            for (int i = 0, count = this.pairs.Length; i < count; i++)
-            {
-                (string pKey, bool pValue) = this.pairs[i];
-                if (pKey == key)
-                {
-                    value = pValue;
-                    return true;
-                }
-            }
-
-            value = default;
-            return false;
+            get { return this.pairs[index]; }
         }
 
-        public bool Equals(IGoapState other)
+        public bool Overlaps(in LocalState other)
         {
-            for (int i = 0, count = this.pairs.Length; i < count; i++)
+            return this.Overlaps(other.pairs);
+        }
+
+        public bool Overlaps(in KeyValuePair<string, bool>[] other)
+        {
+            int count = other.Length;
+
+            if (this.pairs.Length < count)
+                return false;
+
+            for (int i = 0; i < count; i++)
             {
-                (string key, bool value) = this.pairs[i];
-
-                if (!other.TryGetValue(key, out bool otherValue))
-                    return false;
-
-                if (value != otherValue)
+                if (!this.Overlaps(other[i]))
                     return false;
             }
 
             return true;
+        }
+
+        public bool Overlaps(in KeyValuePair<string, bool> other)
+        {
+            return this.Overlaps(other.Key, other.Value);
+        }
+
+        public bool Overlaps(in string key, bool value)
+        {
+            for (int i = 0, count = this.pairs.Length; i < count; i++)
+            {
+                (string k, bool v) = this.pairs[i];
+                if (k == key && v == value)
+                    return true;
+            }
+
+            return false;
         }
 
         public IEnumerator<KeyValuePair<string, bool>> GetEnumerator()
@@ -73,7 +86,7 @@ namespace AI.Goap
             public bool MoveNext()
             {
                 this.index++;
-                
+
                 if (this.index < _pairs.Length)
                 {
                     this.current = _pairs[this.index];
@@ -89,7 +102,7 @@ namespace AI.Goap
                 this.current = default;
                 this.index = -1;
             }
-            
+
             public void Dispose()
             {
                 //Do nothing...
@@ -97,3 +110,36 @@ namespace AI.Goap
         }
     }
 }
+
+// public bool TryGetValue(string key, out bool value)
+// {
+//     for (int i = 0, count = this.pairs.Length; i < count; i++)
+//     {
+//         (string pKey, bool pValue) = this.pairs[i];
+//         if (pKey == key)
+//         {
+//             value = pValue;
+//             return true;
+//         }
+//     }
+//
+//     value = default;
+//     return false;
+// }
+
+
+// public bool OverlapsBy(WorldState other)
+// {
+//     for (int i = 0, count = this.pairs.Length; i < count; i++)
+//     {
+//         (string key, bool value) = this.pairs[i];
+//
+//         if (!other.TryGetValue(key, out bool otherValue))
+//             return false;
+//
+//         if (value != otherValue)
+//             return false;
+//     }
+//
+//     return true;
+// }

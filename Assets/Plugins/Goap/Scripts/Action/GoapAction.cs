@@ -5,8 +5,8 @@ namespace AI.Goap
 {
     public sealed class GoapAction : IGoapAction
     {
-        public IGoapState Effects => _effects;
-        public IGoapState Conditions => _conditions;
+        public LocalState Effects => _effects;
+        public LocalState Conditions => _conditions;
 
         public string Name => _name;
         public bool IsValid => _isValid.Invoke();
@@ -14,8 +14,8 @@ namespace AI.Goap
         public bool IsRunning => isRunning;
 
         private readonly string _name;
-        private readonly IGoapState _effects;
-        private readonly IGoapState _conditions;
+        private readonly LocalState _effects;
+        private readonly LocalState _conditions;
         private readonly Func<bool> _isValid;
         private readonly Func<int> _cost;
 
@@ -28,8 +28,8 @@ namespace AI.Goap
 
         public GoapAction(
             in string name,
-            in IGoapState effects,
-            in IGoapState conditions,
+            in LocalState effects,
+            in LocalState conditions,
             in Func<bool> isValid,
             in Func<int> cost,
             in Func<float, Result> onUpdate,

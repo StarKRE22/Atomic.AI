@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+// ReSharper disable UseDeconstruction
 
 namespace AI.Goap
 {
-    public sealed class WorldState : IGoapState
+    public sealed class WorldState : IEnumerable<KeyValuePair<string, bool>>
     {
         private readonly Dictionary<string, bool> pairs;
 
@@ -12,22 +13,28 @@ namespace AI.Goap
             this.pairs = new Dictionary<string, bool>(values);
         }
 
-        public bool TryGetValue(string key, out bool value)
+        public bool TryGetValue(in string key, out bool value)
         {
             return this.pairs.TryGetValue(key, out value);
         }
 
-        public bool Equals(IGoapState other)
+        public bool Overlaps(in KeyValuePair<string, bool> other)
         {
-            foreach (var (oKey, oValue) in other)
+            (string oKey, bool oValue) = other;
+            return this.pairs.TryGetValue(oKey, out bool value) && value == oValue;
+        }
+
+        public bool Overlaps(LocalState other)
+        {
+            foreach ((string oKey, bool oValue) in other)
             {
                 if (!this.pairs.TryGetValue(oKey, out bool value))
                     return false;
-
+        
                 if (value != oValue)
                     return false;
             }
-
+        
             return true;
         }
 

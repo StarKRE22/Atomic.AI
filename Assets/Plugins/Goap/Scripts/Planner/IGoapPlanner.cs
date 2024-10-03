@@ -7,8 +7,8 @@ namespace AI.Goap
         bool Plan(
             in WorldState worldState,
             in IGoapGoal goal,
-            in ICollection<IGoapAction> actions,
-            out List<IGoapAction> plan //TODO: сделать без аллокаций!
+            in IGoapAction[] actions,
+            List<IGoapAction> plan //TODO: сделать без аллокаций!
         );
     }
 }
