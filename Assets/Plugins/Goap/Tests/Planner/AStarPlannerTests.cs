@@ -143,7 +143,9 @@ namespace AI.Goap
             yield return MeleeCombatEasyCase();
             yield return RangeCombatEasyCase();
             yield return CombatBranchesHasEqualsCostsCase();
+            yield return CompositeGoalPrimitive();
         }
+
 
         private static TestCaseData RangeCombatEasyCase()
         {
@@ -348,7 +350,7 @@ namespace AI.Goap
                             cost: () => 5,
                             onUpdate: null
                         ),
-                     
+
                         //Range branch: weight 8
                         new GoapAction(
                             "RangeCombat",
@@ -373,8 +375,50 @@ namespace AI.Goap
                 .SetCategory("Easy")
                 .SetDescription("When there is several branch with equals costs, planner should select first branch");
         }
-        
-        
+
+
+        private static TestCaseData CompositeGoalPrimitive()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true),
+                        Injured(true),
+                        AtEnemy(true)
+                    ),
+                    new GoapGoal(
+                        "Destroy Enemy And Heaing",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: new[] {EnemyAlive(false), Injured(false)}
+                    ),
+                    new[]
+                    {
+                        //Melee branch: weight 8
+                        new GoapAction(
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 2, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "SelfTreatment",
+                            effects: new LocalState(Injured(false)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        )
+                    },
+                    new[] {"MeleeCombat", "SelfTreatment"}
+                )
+                .SetName("Composite Goal")
+                .SetCategory("Primitive")
+                .SetDescription("When all actions not satisfied goal state then create composite action");
+        }
+
+        //TODO: COMPOSITE GOAL WEAPONS
 
         //TODO: INLINE STATE
 
