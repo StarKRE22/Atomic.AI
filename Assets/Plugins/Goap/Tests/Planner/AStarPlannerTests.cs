@@ -89,16 +89,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 1, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 1 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 5,
-                            onUpdate: null
+                            cost: () => 5
                         ),
 
                         new GoapAction(
@@ -106,16 +104,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
                             isValid: () => true,
-                            cost: () => 1, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 1 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 2,
-                            onUpdate: null
+                            cost: () => 2
                         ),
                     }
                 )
@@ -143,16 +139,14 @@ namespace AI.Goap
                             effects: new LocalState(Injured(false)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         )
                     })
                 .SetName("Goal State Not Reachable");
@@ -195,16 +189,14 @@ namespace AI.Goap
                             effects: new LocalState(Injured(false)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         )
                     }
                 )
@@ -234,16 +226,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 1, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 1 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 2,
-                            onUpdate: null
+                            cost: () => 2
                         ),
                     }
                 )
@@ -310,16 +300,14 @@ namespace AI.Goap
                             effects: new LocalState(Injured(false)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 5,
-                            onUpdate: null
+                            cost: () => 5
                         ),
                         new GoapAction(
                             "SelfAbusing",
                             effects: new LocalState(Injured(true)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 5,
-                            onUpdate: null
+                            cost: () => 5
                         ),
                     },
                     new[] {"SelfTreatment"}
@@ -352,16 +340,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 10, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 10 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 5, //heuristic: 0
-                            onUpdate: null
+                            cost: () => 5 //heuristic: 0
                         ),
 
                         //Range branch: 9
@@ -370,24 +356,21 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(HasAmmo(true), NearEnemy(true)),
                             isValid: () => true,
-                            cost: () => 1, //heuristic: 2
-                            onUpdate: null
+                            cost: () => 1 //heuristic: 2
                         ),
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 2, //heuristic: 0
-                            onUpdate: null
+                            cost: () => 2 //heuristic: 0
                         ),
                         new GoapAction(
                             "PickUpAmmo",
                             effects: new LocalState(HasAmmo(true)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 4, //heuristic: 0
-                            onUpdate: null
+                            cost: () => 4 //heuristic: 0
                         ),
                     },
                     new[] {"PickUpAmmo", "MoveNearEnemy", "RangeCombat"}
@@ -421,16 +404,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 1, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 1 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 5,
-                            onUpdate: null
+                            cost: () => 5
                         ),
 
                         new GoapAction(
@@ -438,16 +419,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
                             isValid: () => true,
-                            cost: () => 1, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 1 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 2,
-                            onUpdate: null
+                            cost: () => 2
                         ),
                     },
                     new[] {"MoveNearEnemy", "RangeCombat"}
@@ -479,16 +458,14 @@ namespace AI.Goap
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 7,
-                            onUpdate: null
+                            cost: () => 7
                         ),
                         new GoapAction(
                             "MeleeCombat",
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 2, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 2 //heuristic: 1
                         ),
 
                         new GoapAction(
@@ -496,16 +473,14 @@ namespace AI.Goap
                             effects: new LocalState(NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 5,
-                            onUpdate: null
+                            cost: () => 5
                         ),
                         new GoapAction(
                             "RangeCombat",
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
                             isValid: () => true,
-                            cost: () => 4, //heuristic: 2
-                            onUpdate: null
+                            cost: () => 4 //heuristic: 2
                         )
                     },
                     new[] {"MoveAtEnemy", "MeleeCombat"}
@@ -549,16 +524,14 @@ namespace AI.Goap
                             effects: new LocalState(Injured(false)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         )
                     },
                     new[] {"SelfTreatment"}
@@ -591,16 +564,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 2, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 2 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 5,
-                            onUpdate: null
+                            cost: () => 5
                         ),
 
                         //Range branch: weight 8
@@ -609,16 +580,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
                             isValid: () => true,
-                            cost: () => 4, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 4 //heuristic: 1
                         ),
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 3,
-                            onUpdate: null
+                            cost: () => 3
                         )
                     },
                     new[] {"MoveAtEnemy", "MeleeCombat"}
@@ -651,16 +620,14 @@ namespace AI.Goap
                             effects: new LocalState(EnemyAlive(false)),
                             conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 2, //heuristic: 1
-                            onUpdate: null
+                            cost: () => 2 //heuristic: 1
                         ),
                         new GoapAction(
                             "SelfTreatment",
                             effects: new LocalState(Injured(false)),
                             conditions: new LocalState(),
                             isValid: () => true,
-                            cost: () => 10,
-                            onUpdate: null
+                            cost: () => 10
                         )
                     },
                     new[] {"MeleeCombat", "SelfTreatment"}
@@ -670,58 +637,6 @@ namespace AI.Goap
                 .SetDescription("When all actions not satisfied goal state then create composite action");
         }
 
-
-        //TODO: WITH AMMO RANGE BRANCH
-        // new GoapAction(
-        //     "PickUpAmmo",
-        // effects: new LocalState(HasAmmo(true)),
-        // conditions: new LocalState(),
-        // isValid: () => true,
-        // cost: () => 0,
-        // onUpdate: null
-        // )
-
-        // [Test]
-        // public void RangeCombatPlanTest()
-        // {
-        //     //Arrange:
-        //     var worldState = new FactState(
-        //         new Fact("enemyExists", true),
-        //         new Fact("nearEnemy", false),
-        //         new Fact("atEnemy", false),
-        //         new Fact("isInjured", true),
-        //         new Fact("arrowsExists", true)
-        //     );
-        //
-        //     var goal = new FactState(
-        //         new Fact("enemyExists", false)
-        //     );
-        //
-        //     var actions = new[]
-        //     {
-        //         SwordCombatAction,
-        //         BowCombatAction,
-        //         MoveNearEnemyAction,
-        //         MoveAtEnemyAction,
-        //         MoveToResourceAction,
-        //         MakeHealAction
-        //     };
-        //
-        //     //Act:
-        //     var success = this.planner.TryMakePlan(worldState, goal, actions, out var actualPlan);
-        //
-        //     //Assert:
-        //     Assert.True(success);
-        //
-        //     var expectedPlan = new List<IActor>
-        //     {
-        //         MoveNearEnemyAction,
-        //         BowCombatAction
-        //     };
-        //
-        //     Assert.True(EqualsPlans(expectedPlan, actualPlan));
-        // }
-        //
         // [Test]
         // public void DrinkBeerTest()
         // {

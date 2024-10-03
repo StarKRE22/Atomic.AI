@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Pool;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable UseDeconstruction
 
-
 [assembly: InternalsVisibleTo("Goap.Tests")]
-
 
 namespace AI.Goap
 {
@@ -231,7 +227,6 @@ namespace AI.Goap
             foreach (Node node in openList.Values)
             {
                 int weight = node.weight;
-                Debug.Log($"OPEN NODE {node.action.Name}: {node.weight}");
                 if (weight < minWeight)
                 {
                     result = node;
@@ -248,7 +243,7 @@ namespace AI.Goap
             {
                 IGoapAction action = end.action;
 
-                if (action is GoapActionSequence sequence)
+                if (action is ActionGroup sequence)
                 {
                     plan.AddRange(sequence.Actions);
                 }
@@ -322,12 +317,12 @@ namespace AI.Goap
                 sequence.Add(action);
             }
 
-            neighbour = new GoapActionSequence(null, sequence);
+            neighbour = new ActionGroup(null, sequence);
             ListPool<IGoapAction>.Release(sequence);
             return true;
         }
 
-        private bool FindCheapestAction(
+        internal bool FindCheapestAction(
             in KeyValuePair<string, bool> condition,
             in IGoapAction[] actions,
             out IGoapAction result)

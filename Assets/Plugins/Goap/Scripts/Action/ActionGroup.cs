@@ -1,30 +1,16 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine.Pool;
+// ReSharper disable ReturnTypeCanBeEnumerable.Global
 
 namespace AI.Goap
 {
-    public sealed class GoapActionSequence : IGoapAction
+    internal sealed class ActionGroup : IGoapAction
     {
-        private readonly string name;
-        private readonly LocalState effects;
-        private readonly LocalState conditions;
-        private readonly List<IGoapAction> actions;
-        private bool isRunning;
-
         public string Name => this.name;
         public LocalState Effects => this.effects;
         public LocalState Conditions => this.conditions;
-
-        public bool IsRunning
-        {
-            get { return this.isRunning; }
-        }
-
-        public IReadOnlyList<IGoapAction> Actions
-        {
-            get { return this.actions; }
-        }
+        
+        public IEnumerable<IGoapAction> Actions => this.actions;
 
         public bool IsValid
         {
@@ -32,8 +18,7 @@ namespace AI.Goap
             {
                 for (int i = 0, count = this.actions.Count; i < count; i++)
                 {
-                    IGoapAction action = this.actions[i];
-                    if (!action.IsValid)
+                    if (!this.actions[i].IsValid)
                         return false;
                 }
 
@@ -46,46 +31,37 @@ namespace AI.Goap
             get
             {
                 int cost = 0;
-                for (int i = 0, count = this.actions.Count; i < count; i++)
-                {
-                    IGoapAction action = this.actions[i];
-                    cost += action.Cost;
-                }
+                for (int i = 0, count = this.actions.Count; i < count; i++) 
+                    cost += this.actions[i].Cost;
 
                 return cost;
             }
         }
+        
+        private readonly string name;
+        private readonly LocalState effects;
+        private readonly LocalState conditions;
+        private readonly List<IGoapAction> actions;
 
-        public GoapActionSequence(in string name, in IReadOnlyList<IGoapAction> actions)
+        public ActionGroup(in string name, in IReadOnlyList<IGoapAction> actions)
         {
             HashSet<KeyValuePair<string, bool>> effects = HashSetPool<KeyValuePair<string, bool>>.Get();
             HashSet<KeyValuePair<string, bool>> conditions = HashSetPool<KeyValuePair<string, bool>>.Get();
-
-            this.name = name;
-            this.actions = new List<IGoapAction>();
             
-            foreach (IGoapAction action in actions)
+            for (int i = 0, count = actions.Count; i < count; i++)
             {
-                this.actions.Add(action);
+                IGoapAction action = actions[i];
                 effects.UnionWith(action.Effects);
                 conditions.UnionWith(action.Conditions);
             }
 
+            this.name = name;
+            this.actions = new List<IGoapAction>(actions);
             this.effects = new LocalState(effects);
             this.conditions = new LocalState(conditions);
 
             HashSetPool<KeyValuePair<string, bool>>.Release(effects);
             HashSetPool<KeyValuePair<string, bool>>.Release(conditions);
-        }
-
-        public IGoapAction.Result Run(in float deltaTime)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Cancel()
-        {
-            throw new NotImplementedException();
         }
     }
 }

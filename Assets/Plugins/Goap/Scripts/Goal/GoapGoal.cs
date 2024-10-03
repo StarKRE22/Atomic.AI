@@ -8,12 +8,12 @@ namespace AI.Goap
         public string Name => _name;
         public bool IsValid => _isValid.Invoke();
         public int Priority => _priority.Invoke();
-        public LocalState Result => result;
+        public LocalState Result => _result;
 
         private readonly string _name;
         private readonly Func<bool> _isValid;
         private readonly Func<int> _priority;
-        private readonly LocalState result;
+        private readonly LocalState _result;
 
         public GoapGoal(
             in string name,
@@ -25,20 +25,20 @@ namespace AI.Goap
             _name = name;
             _isValid = isValid;
             _priority = priority;
-            this.result = new LocalState(result);
+            _result = new LocalState(result);
         }
         
         public GoapGoal(
             in string name,
             in Func<bool> isValid,
             in Func<int> priority,
-            LocalState result
+            in LocalState result
         )
         {
             _name = name;
             _isValid = isValid;
             _priority = priority;
-            this.result = result;
+            _result = result;
         }
     }
 }

@@ -13,8 +13,7 @@ namespace AI.Goap
             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
             conditions: new LocalState(EnemyAlive(true)),
             isValid: () => true,
-            cost: () => 10,
-            onUpdate: null
+            cost: () => 10
         );
     }
 }
