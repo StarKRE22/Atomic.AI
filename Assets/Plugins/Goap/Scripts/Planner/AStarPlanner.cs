@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 using UnityEngine.Pool;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -65,12 +66,12 @@ namespace AI.Goap
             LocalState goalState = goal.Result;
             if (worldState.Overlaps(goalState))
                 return true;
-            
+
             if (actions.Length == 0)
                 return false;
 
             bool complete = false;
-            
+
             Dictionary<IGoapAction, Node> openList = DictionaryPool<IGoapAction, Node>.Get();
             HashSet<IGoapAction> closedList = HashSetPool<IGoapAction>.Get();
 
@@ -78,8 +79,10 @@ namespace AI.Goap
 
             while (this.TryPeekAction(openList, out Node node))
             {
-                IGoapAction action = node.Action;
+                IGoapAction action = node.action;
                 openList.Remove(action);
+
+                Debug.Log($"LOOK ACTION {action.Name}");
 
                 if (worldState.Overlaps(action.Conditions))
                 {
@@ -91,7 +94,7 @@ namespace AI.Goap
                 this.VisitAction(node, worldState, actions, openList, closedList);
                 closedList.Add(action);
             }
-            
+
             DictionaryPool<IGoapAction, Node>.Release(openList);
             HashSetPool<IGoapAction>.Release(closedList);
 
@@ -109,12 +112,23 @@ namespace AI.Goap
             {
                 IGoapAction action = actions[i];
 
-                if (this.OverlapsCondition(goalState, action.Effects, worldState))
+                if (!this.OverlapsConditions(goalState, action.Effects, worldState))
+                    continue;
+
+                int cost = action.Cost;
+                int heuristic = this.GetHeuristic(worldState, action.Conditions);
+                int weight = cost + heuristic;
+
+                Node node = new Node
                 {
-                    int heuristic = this.GetHeuristic(worldState, action.Conditions);
-                    Node node = new Node(action, null, action.Cost, heuristic);
-                    openList.Add(action, node);
-                }
+                    action = action,
+                    previous = null,
+                    cost = cost,
+                    heuristic = heuristic,
+                    weight = weight
+                };
+
+                openList.Add(action, node);
             }
         }
 
@@ -126,7 +140,8 @@ namespace AI.Goap
             in HashSet<IGoapAction> closedList
         )
         {
-            LocalState conditionState = visitingNode.Action.Conditions;
+            LocalState visitingConditions = visitingNode.action.Conditions;
+            int visitingWeight = visitingNode.weight;
 
             for (int i = 0, count = actions.Length; i < count; i++)
             {
@@ -135,23 +150,33 @@ namespace AI.Goap
                 if (closedList.Contains(action))
                     continue;
 
-                if (!this.OverlapsCondition(conditionState, action.Effects, worldState))
+                if (!this.OverlapsConditions(visitingConditions, action.Effects, worldState))
                     continue;
-
-                int cost = visitingNode.Cost + action.Cost;
 
                 if (openList.TryGetValue(action, out Node actionNode))
                 {
-                    if (actionNode.Cost > cost)
+                    int actionWeight = visitingWeight + actionNode.cost + actionNode.heuristic;
+                    if (actionNode.weight > actionWeight)
                     {
-                        actionNode.Previous = visitingNode;
-                        actionNode.Cost = cost;
+                        actionNode.previous = visitingNode;
+                        actionNode.weight = actionWeight;
                     }
                 }
                 else
                 {
-                    var heuristic = this.GetHeuristic(worldState, action.Conditions);
-                    actionNode = new Node(action, visitingNode, cost, heuristic);
+                    int actionCost = action.Cost;
+                    int actionHeuristic = this.GetHeuristic(worldState, action.Conditions);
+                    int actionWeight = visitingWeight + actionCost + actionHeuristic;
+
+                    actionNode = new Node
+                    {
+                        action = action,
+                        previous = visitingNode,
+                        cost = actionCost,
+                        heuristic = actionHeuristic,
+                        weight = actionWeight
+                    };
+
                     openList.Add(action, actionNode);
                 }
             }
@@ -164,7 +189,8 @@ namespace AI.Goap
 
             foreach (Node node in openList.Values)
             {
-                int weight = node.Weight;
+                int weight = node.weight;
+                Debug.Log($"OPEN NODE {node.action.Name}: {node.weight}");
                 if (weight < minWeight)
                 {
                     result = node;
@@ -179,8 +205,8 @@ namespace AI.Goap
         {
             while (end != null)
             {
-                plan.Add(end.Action);
-                end = end.Previous;
+                plan.Add(end.action);
+                end = end.previous;
             }
         }
 
@@ -205,7 +231,7 @@ namespace AI.Goap
             return result;
         }
 
-        internal bool OverlapsCondition(in LocalState conditions, in LocalState effects, in WorldState worldState)
+        internal bool OverlapsConditions(in LocalState conditions, in LocalState effects, in WorldState worldState)
         {
             for (int i = 0, count = conditions.Count; i < count; i++)
             {
@@ -219,23 +245,11 @@ namespace AI.Goap
 
         internal sealed class Node
         {
-            public IGoapAction Action;
-            public Node Previous;
-            public int Heuristic;
-            public int Cost;
-
-            public int Weight
-            {
-                get { return this.Cost + this.Heuristic; }
-            }
-
-            public Node(in IGoapAction action, in Node previous, in int cost, in int heuristic)
-            {
-                this.Action = action;
-                this.Previous = previous;
-                this.Cost = cost;
-                this.Heuristic = heuristic;
-            }
+            public IGoapAction action;
+            public int heuristic;
+            public int cost;
+            public Node previous;
+            public int weight;
         }
     }
 }

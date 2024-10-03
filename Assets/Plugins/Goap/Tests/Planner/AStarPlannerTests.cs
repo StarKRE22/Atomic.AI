@@ -133,40 +133,41 @@ namespace AI.Goap
             Assert.AreEqual(count, actualPlan.Count);
 
             for (int i = 0; i < count; i++)
-            {
                 Assert.AreEqual(expectedPlan[i], actualPlan[i].Name);
-            }
         }
 
         private static IEnumerable<TestCaseData> SuccessfulPlanCases()
         {
-            //Test:
-            yield return new TestCaseData(
-                    new WorldState(EnemyAlive(false)),
+            yield return GoalStateEqualsWorldStateCase();
+            yield return HealingGoalPrimitveCase();
+            yield return MeleeCombatEasyCase();
+            yield return RangeCombatEasyCase();
+            yield return CombatBranchesHasEqualsCostsCase();
+        }
+
+        private static TestCaseData RangeCombatEasyCase()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true),
+                        NearEnemy(false),
+                        AtEnemy(false),
+                        HasAmmo(true)
+                    ),
                     new GoapGoal(
                         "Destroy Enemy",
                         isValid: () => true,
                         priority: () => 1,
                         result: EnemyAlive(false)
                     ),
-                    Array.Empty<IGoapAction>(),
-                    Array.Empty<string>()
-                )
-                .SetName("Goal state equals world state")
-                .SetDescription("Even if the action list is empty, then first check for world and goal states");
-
-            //Test:
-            yield return new TestCaseData(
-                    new WorldState(Injured(true)),
-                    HealingGoal,
                     new[]
                     {
                         new GoapAction(
-                            "SelfTreatment",
-                            effects: new LocalState(Injured(false)),
-                            conditions: new LocalState(),
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
                             isValid: () => true,
-                            cost: () => 10,
+                            cost: () => 1, //heuristic: 1
                             onUpdate: null
                         ),
                         new GoapAction(
@@ -174,22 +175,41 @@ namespace AI.Goap
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
                             conditions: new LocalState(EnemyAlive(true)),
                             isValid: () => true,
-                            cost: () => 10,
+                            cost: () => 5,
                             onUpdate: null
-                        )
-                    },
-                    new[] {"SelfTreatment"}
-                )
-                .SetName("Healing plan")
-                .SetCategory("Primitive");
+                        ),
 
-            //Test:
-            yield return new TestCaseData(
+                        new GoapAction(
+                            "RangeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
+                            isValid: () => true,
+                            cost: () => 1, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveNearEnemy",
+                            effects: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 2,
+                            onUpdate: null
+                        ),
+                    },
+                    new[] {"MoveNearEnemy", "RangeCombat"}
+                )
+                .SetName("Range Combat")
+                .SetCategory("Easy")
+                .SetDescription("Planner should select range branch because range cost 4, but melee — 7");
+        }
+
+        private static TestCaseData MeleeCombatEasyCase()
+        {
+            return new TestCaseData(
                     new WorldState(
                         EnemyAlive(true),
                         NearEnemy(false),
                         AtEnemy(false),
-                        Injured(true),
                         HasAmmo(true)
                     ),
                     new GoapGoal(
@@ -228,7 +248,7 @@ namespace AI.Goap
                         new GoapAction(
                             "RangeCombat",
                             effects: new LocalState(EnemyAlive(false)),
-                            conditions: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
                             isValid: () => true,
                             cost: () => 4, //heuristic: 2
                             onUpdate: null
@@ -236,42 +256,136 @@ namespace AI.Goap
                     },
                     new[] {"MoveAtEnemy", "MeleeCombat"}
                 )
-                .SetName("Melee plan")
+                .SetName("Melee Combat")
                 .SetCategory("Easy")
                 .SetDescription("Planner should select melee branch because melee cost 10, but range — 11");
         }
 
-        //TODO: WITH AMMO RANGE BRANCH
+        private static TestCaseData GoalStateEqualsWorldStateCase()
+        {
+            return new TestCaseData(
+                    new WorldState(EnemyAlive(false)),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    Array.Empty<IGoapAction>(),
+                    Array.Empty<string>()
+                )
+                .SetName("Goal State equals World State")
+                .SetDescription("Even if the action list is empty, then first check for world and goal states");
+        }
 
-        // [Test]
-        // public void MeleeCombatPlanTest()
-        // {
-        //
-        //     var goal = new FactState(
-        //         new Fact("enemyExists", false)
-        //     );
-        //
-        //     var actions = new[]
-        //     {
-        //         SwordCombatAction,
-        //         MoveAtEnemyAction,
-        //         MakeHealAction
-        //     };
-        //
-        //     //Act:
-        //     var success = this.planner.TryMakePlan(worldState, goal, actions, out var actualPlan);
-        //
-        //     //Assert:
-        //     Assert.True(success);
-        //
-        //     var expectedPlan = new List<IActor>
-        //     {
-        //         MoveAtEnemyAction,
-        //         SwordCombatAction
-        //     };
-        //     Assert.True(EqualsPlans(expectedPlan, actualPlan));
-        // }
-        //
+        private static TestCaseData HealingGoalPrimitveCase()
+        {
+            return new TestCaseData(
+                    new WorldState(Injured(true)),
+                    new GoapGoal(
+                        "Healing",
+                        isValid: () => true,
+                        priority: () => 5,
+                        result: Injured(false)
+                    ),
+                    new[]
+                    {
+                        new GoapAction(
+                            "SelfTreatment",
+                            effects: new LocalState(Injured(false)),
+                            conditions: new LocalState(),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 10,
+                            onUpdate: null
+                        )
+                    },
+                    new[] {"SelfTreatment"}
+                )
+                .SetName("SelfTreatment")
+                .SetCategory("Primitive");
+        }
+
+
+        private static TestCaseData CombatBranchesHasEqualsCostsCase()
+        {
+            return new TestCaseData(
+                    new WorldState(
+                        EnemyAlive(true),
+                        NearEnemy(false),
+                        AtEnemy(false),
+                        HasAmmo(true)
+                    ),
+                    new GoapGoal(
+                        "Destroy Enemy",
+                        isValid: () => true,
+                        priority: () => 1,
+                        result: EnemyAlive(false)
+                    ),
+                    new[]
+                    {
+                        //Melee branch: weight 8
+                        new GoapAction(
+                            "MeleeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(AtEnemy(true)),
+                            isValid: () => true,
+                            cost: () => 2, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveAtEnemy",
+                            effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 5,
+                            onUpdate: null
+                        ),
+                     
+                        //Range branch: weight 8
+                        new GoapAction(
+                            "RangeCombat",
+                            effects: new LocalState(EnemyAlive(false)),
+                            conditions: new LocalState(NearEnemy(true), HasAmmo(true)),
+                            isValid: () => true,
+                            cost: () => 4, //heuristic: 1
+                            onUpdate: null
+                        ),
+                        new GoapAction(
+                            "MoveNearEnemy",
+                            effects: new LocalState(NearEnemy(true)),
+                            conditions: new LocalState(EnemyAlive(true)),
+                            isValid: () => true,
+                            cost: () => 3,
+                            onUpdate: null
+                        )
+                    },
+                    new[] {"MoveAtEnemy", "MeleeCombat"}
+                )
+                .SetName("Combat branches have equal cost")
+                .SetCategory("Easy")
+                .SetDescription("When there is several branch with equals costs, planner should select first branch");
+        }
+
+        //TODO: INLINE STATE
+
+        //TODO: WITH AMMO RANGE BRANCH
+        // new GoapAction(
+        //     "PickUpAmmo",
+        // effects: new LocalState(HasAmmo(true)),
+        // conditions: new LocalState(),
+        // isValid: () => true,
+        // cost: () => 0,
+        // onUpdate: null
+        // )
+
         // [Test]
         // public void RangeCombatPlanTest()
         // {
