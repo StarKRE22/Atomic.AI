@@ -11,7 +11,14 @@ namespace AI.Goap
             name: nameof(DestroyEnemyGoal),
             isValid: () => true,
             priority: () => 1,
-            effects: EnemyAlive(false)
+            result: EnemyAlive(false)
+        );
+
+        public static readonly IGoapGoal HealingGoal = new GoapGoal(
+            name: nameof(HealingGoal),
+            isValid: () => true,
+            priority: () => 5,
+            result: Injured(false)
         );
     }
 }

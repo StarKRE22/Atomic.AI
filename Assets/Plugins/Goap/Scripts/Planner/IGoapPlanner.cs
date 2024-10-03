@@ -8,7 +8,14 @@ namespace AI.Goap
             in WorldState worldState,
             in IGoapGoal goal,
             in IGoapAction[] actions,
-            List<IGoapAction> plan //TODO: сделать без аллокаций!
+            out List<IGoapAction> plan
+        );
+        
+        bool Plan(
+            in WorldState worldState,
+            in IGoapGoal goal,
+            in IGoapAction[] actions,
+            List<IGoapAction> plan
         );
     }
 }

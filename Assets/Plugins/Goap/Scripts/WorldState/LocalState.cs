@@ -8,7 +8,7 @@ namespace AI.Goap
         public int Count => this.pairs.Length;
         
         private readonly KeyValuePair<string, bool>[] pairs;
-
+        
         public LocalState(params KeyValuePair<string, bool>[] pairs)
         {
             this.pairs = pairs;

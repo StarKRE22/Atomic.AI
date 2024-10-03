@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine.Pool;
+
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 
 // ReSharper disable UseDeconstruction
@@ -9,18 +11,27 @@ using System.Runtime.CompilerServices;
 
 namespace AI.Goap
 {
+    //TODO: Сделать вложенный A*
     public sealed class AStarPlanner : IGoapPlanner
     {
         internal readonly int heuristicPoints;
         internal readonly int heuristicUndefined;
 
-        internal readonly Dictionary<IGoapAction, Node> openList = new();
-        internal readonly HashSet<IGoapAction> closedList = new();
-
         public AStarPlanner(int heuristicPoints = 1, int heuristicUndefined = int.MaxValue)
         {
             this.heuristicPoints = heuristicPoints;
             this.heuristicUndefined = heuristicUndefined;
+        }
+
+        public bool Plan(
+            in WorldState worldState,
+            in IGoapGoal goal,
+            in IGoapAction[] actions,
+            out List<IGoapAction> plan
+        )
+        {
+            plan = new List<IGoapAction>();
+            return this.Plan(worldState, goal, actions, plan);
         }
 
         public bool Plan(
@@ -38,10 +49,10 @@ namespace AI.Goap
 
             if (actions == null)
                 throw new ArgumentNullException(nameof(actions));
-            
+
             if (actions.Length == 0)
                 return false;
-            
+
             return this.PlanInternal(worldState, goal, actions, plan);
         }
 
@@ -56,32 +67,45 @@ namespace AI.Goap
 
             LocalState goalState = goal.Result;
             if (worldState.Overlaps(goalState))
+            {
                 return true;
+            }
+
+            bool complete = false;
             
-            this.openList.Clear();
-            this.closedList.Clear();
+            Dictionary<IGoapAction, Node> openList = DictionaryPool<IGoapAction, Node>.Get();
+            HashSet<IGoapAction> closedList = HashSetPool<IGoapAction>.Get();
 
-            this.VisitGoal(goalState, worldState, actions);
+            this.VisitGoal(goalState, worldState, actions, openList);
 
-            while (this.TryPeekAction(out Node node))
+            while (this.TryPeekAction(openList, out Node node))
             {
                 IGoapAction action = node.Action;
-                this.openList.Remove(action);
+                openList.Remove(action);
 
                 if (worldState.Overlaps(action.Conditions))
                 {
                     this.CreatePlan(node, plan);
-                    return true;
+                    complete = true;
+                    break;
                 }
 
-                this.VisitAction(node, worldState, actions);
-                this.closedList.Add(action);
+                this.VisitAction(node, worldState, actions, openList, closedList);
+                closedList.Add(action);
             }
+            
+            DictionaryPool<IGoapAction, Node>.Release(openList);
+            HashSetPool<IGoapAction>.Release(closedList);
 
-            return false;
+            return complete;
         }
 
-        internal void VisitGoal(in LocalState goalState, in WorldState worldState, in IGoapAction[] actions)
+        internal void VisitGoal(
+            in LocalState goalState,
+            in WorldState worldState,
+            in IGoapAction[] actions,
+            Dictionary<IGoapAction, Node> openList
+        )
         {
             for (int i = 0, count = actions.Length; i < count; i++)
             {
@@ -91,28 +115,34 @@ namespace AI.Goap
                 {
                     int heuristic = this.GetHeuristic(worldState, action.Conditions);
                     Node node = new Node(action, null, action.Cost, heuristic);
-                    this.openList.Add(action, node);
+                    openList.Add(action, node);
                 }
             }
         }
-        
-        internal void VisitAction(in Node visitingNode, in WorldState worldState, in IGoapAction[] actions)
+
+        internal void VisitAction(
+            in Node visitingNode,
+            in WorldState worldState,
+            in IGoapAction[] actions,
+            Dictionary<IGoapAction, Node> openList,
+            in HashSet<IGoapAction> closedList
+        )
         {
             LocalState conditionState = visitingNode.Action.Conditions;
 
             for (int i = 0, count = actions.Length; i < count; i++)
             {
                 IGoapAction action = actions[i];
-               
-                if (this.closedList.Contains(action))
+
+                if (closedList.Contains(action))
                     continue;
 
                 if (!this.OverlapsCondition(conditionState, action.Effects, worldState))
                     continue;
 
                 int cost = visitingNode.Cost + action.Cost;
-                
-                if (this.openList.TryGetValue(action, out Node actionNode))
+
+                if (openList.TryGetValue(action, out Node actionNode))
                 {
                     if (actionNode.Cost > cost)
                     {
@@ -122,19 +152,19 @@ namespace AI.Goap
                 }
                 else
                 {
-                    var heuristic =  this.GetHeuristic(worldState, action.Conditions);
+                    var heuristic = this.GetHeuristic(worldState, action.Conditions);
                     actionNode = new Node(action, visitingNode, cost, heuristic);
-                    this.openList.Add(action, actionNode);
+                    openList.Add(action, actionNode);
                 }
             }
         }
 
-        internal bool TryPeekAction(out Node result)
+        internal bool TryPeekAction(Dictionary<IGoapAction, Node> openList, out Node result)
         {
             result = null;
             int minWeight = int.MaxValue;
 
-            foreach (Node node in this.openList.Values)
+            foreach (Node node in openList.Values)
             {
                 int weight = node.Weight;
                 if (weight < minWeight)
