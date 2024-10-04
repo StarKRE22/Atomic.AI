@@ -5,13 +5,23 @@ using System.Collections.Generic;
 
 namespace AI.Goap
 {
-    public sealed class WorldState : IEnumerable<KeyValuePair<string, bool>>
+    public sealed class WorldState : IGoapState
     {
         private readonly Dictionary<string, bool> pairs;
+
+        public WorldState()
+        {
+            this.pairs = new Dictionary<string, bool>();
+        }
 
         public WorldState(params KeyValuePair<string, bool>[] values)
         {
             this.pairs = new Dictionary<string, bool>(values);
+        }
+
+        public bool this[in string key]
+        {
+            get { return this.pairs[key]; }
         }
 
         public bool TryGetValue(in string key, out bool value)

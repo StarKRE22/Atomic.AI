@@ -7,14 +7,14 @@ namespace AI.Goap
         bool Plan(
             in WorldState worldState,
             in IGoapGoal goal,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             out List<IGoapAction> plan
         );
         
         bool Plan(
             in WorldState worldState,
             in IGoapGoal goal,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             List<IGoapAction> plan
         );
     }

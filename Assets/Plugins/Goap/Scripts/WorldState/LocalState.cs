@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace AI.Goap
 {
-    public sealed class LocalState : IEnumerable<KeyValuePair<string, bool>>
+    public sealed class LocalState : IGoapState
     {
         public int Count => this.pairs.Length;
         
@@ -18,6 +18,21 @@ namespace AI.Goap
         public LocalState(params KeyValuePair<string, bool>[] pairs)
         {
             this.pairs = pairs;
+        }
+        
+        public bool this[in string key]
+        {
+            get
+            {
+                for (int i = 0, count = this.pairs.Length; i < count; i++)
+                {
+                    (string pKey, bool pValue) = this.pairs[i];
+                    if (pKey == key)
+                        return pValue;
+                }
+
+                throw new KeyNotFoundException(nameof(key));
+            }
         }
 
         public KeyValuePair<string, bool> this[in int index]
@@ -60,6 +75,24 @@ namespace AI.Goap
                     return true;
             }
 
+            return false;
+        }
+
+       
+
+        public bool TryGetValue(in string key, out bool value)
+        {
+            for (int i = 0, count = this.pairs.Length; i < count; i++)
+            {
+                (string pKey, bool pValue) = this.pairs[i];
+                if (pKey == key)
+                {
+                    value = pValue;
+                    return true;
+                }
+            }
+
+            value = default;
             return false;
         }
 
@@ -116,36 +149,3 @@ namespace AI.Goap
         }
     }
 }
-
-// public bool TryGetValue(string key, out bool value)
-// {
-//     for (int i = 0, count = this.pairs.Length; i < count; i++)
-//     {
-//         (string pKey, bool pValue) = this.pairs[i];
-//         if (pKey == key)
-//         {
-//             value = pValue;
-//             return true;
-//         }
-//     }
-//
-//     value = default;
-//     return false;
-// }
-
-
-// public bool OverlapsBy(WorldState other)
-// {
-//     for (int i = 0, count = this.pairs.Length; i < count; i++)
-//     {
-//         (string key, bool value) = this.pairs[i];
-//
-//         if (!other.TryGetValue(key, out bool otherValue))
-//             return false;
-//
-//         if (value != otherValue)
-//             return false;
-//     }
-//
-//     return true;
-// }

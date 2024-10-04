@@ -24,7 +24,7 @@ namespace AI.Goap
         public bool Plan(
             in WorldState worldState,
             in IGoapGoal goal,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             out List<IGoapAction> plan
         )
         {
@@ -35,7 +35,7 @@ namespace AI.Goap
         public bool Plan(
             in WorldState worldState,
             in IGoapGoal goal,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             List<IGoapAction> plan
         )
         {
@@ -54,7 +54,7 @@ namespace AI.Goap
         internal bool PlanInternal(
             in WorldState worldState,
             in IGoapGoal goal,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             List<IGoapAction> plan
         )
         {
@@ -67,7 +67,7 @@ namespace AI.Goap
             if (worldState.Overlaps(goalState))
                 return true;
 
-            if (actions.Length == 0)
+            if (actions.Count == 0)
                 return false;
             
             var openList = DictionaryPool<IGoapAction, Node>.Get();
@@ -101,12 +101,12 @@ namespace AI.Goap
         internal void VisitGoal(
             in LocalState goalState,
             in WorldState worldState,
-            in IGoapAction[] actions,
-            Dictionary<IGoapAction, Node> openList
+            in IReadOnlyList<IGoapAction> actions,
+            in Dictionary<IGoapAction, Node> openList
         )
         {
             int neighbours = 0;
-            for (int i = 0, count = actions.Length; i < count; i++)
+            for (int i = 0, count = actions.Count; i < count; i++)
             {
                 IGoapAction action = actions[i];
 
@@ -152,8 +152,8 @@ namespace AI.Goap
         internal void VisitAction(
             in Node node,
             in WorldState worldState,
-            in IGoapAction[] actions,
-            Dictionary<IGoapAction, Node> openList,
+            in IReadOnlyList<IGoapAction> actions,
+            in Dictionary<IGoapAction, Node> openList,
             in HashSet<IGoapAction> closedList
         )
         {
@@ -162,7 +162,7 @@ namespace AI.Goap
 
             int satisfied = 0;
 
-            for (int i = 0, count = actions.Length; i < count; i++)
+            for (int i = 0, count = actions.Count; i < count; i++)
             {
                 IGoapAction action = actions[i];
 
@@ -293,7 +293,7 @@ namespace AI.Goap
         internal bool CreateNeighbour(
             in LocalState conditions,
             in WorldState worldState,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             out IGoapAction neighbour
         )
         {
@@ -324,13 +324,13 @@ namespace AI.Goap
 
         internal bool FindCheapestAction(
             in KeyValuePair<string, bool> condition,
-            in IGoapAction[] actions,
+            in IReadOnlyList<IGoapAction> actions,
             out IGoapAction result)
         {
             int minCost = int.MaxValue;
             result = default;
 
-            for (int i = 0, count = actions.Length; i < count; i++)
+            for (int i = 0, count = actions.Count; i < count; i++)
             {
                 IGoapAction action = actions[i];
                 if (!action.Effects.Overlaps(condition))
