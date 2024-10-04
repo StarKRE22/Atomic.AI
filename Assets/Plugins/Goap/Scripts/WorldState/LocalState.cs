@@ -78,8 +78,6 @@ namespace AI.Goap
             return false;
         }
 
-       
-
         public bool TryGetValue(in string key, out bool value)
         {
             for (int i = 0, count = this.pairs.Length; i < count; i++)
