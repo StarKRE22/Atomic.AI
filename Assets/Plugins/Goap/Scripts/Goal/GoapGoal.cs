@@ -27,12 +27,12 @@ namespace AI.Goap
             _priority = priority;
             _result = new LocalState(result);
         }
-        
+
         public GoapGoal(
             in string name,
+            in LocalState result,
             in Func<bool> isValid,
-            in Func<int> priority,
-            in LocalState result
+            in Func<int> priority
         )
         {
             _name = name;

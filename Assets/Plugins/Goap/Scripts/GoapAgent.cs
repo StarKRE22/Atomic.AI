@@ -57,6 +57,28 @@ namespace AI.Goap
             return goal != null && this.goals.Contains(goal);
         }
 
+        internal bool GetPriorityGoal(out IGoapGoal result)
+        {
+            result = default;
+            int maxPriority = int.MinValue;
+
+            for (int i = 0, count = this.goals.Count; i < count; i++)
+            {
+                IGoapGoal goal = this.goals[i];
+                if (!goal.IsValid)
+                    continue;
+
+                int priority = goal.Priority;
+                if (priority > maxPriority)
+                {
+                    result = goal;
+                    maxPriority = priority;
+                }
+            }
+
+            return result != null;
+        }
+
         #endregion
 
         #region Actions
@@ -87,7 +109,21 @@ namespace AI.Goap
         {
             return action != null && this.actions.Contains(action);
         }
-
+        
+        internal void GetValidActions(List<IGoapAction> results)
+        {
+            results.Clear();
+            
+            for (int i = 0, count = this.actions.Count; i < count; i++)
+            {
+                IGoapAction action = this.actions[i];
+                if (action.IsValid)
+                {
+                    results.Add(action);
+                }
+            }
+        }
+        
         #endregion
 
         #region Sensors
@@ -104,7 +140,7 @@ namespace AI.Goap
 
             if (this.sensors.Contains(sensor))
                 return false;
-            
+
             this.sensors.Add(sensor);
             return true;
         }
@@ -118,7 +154,7 @@ namespace AI.Goap
         {
             return sensor != null && this.sensors.Contains(sensor);
         }
-        
+
         #endregion
 
         #region WorldState
