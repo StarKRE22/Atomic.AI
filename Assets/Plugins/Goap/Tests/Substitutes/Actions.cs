@@ -11,7 +11,7 @@ namespace AI.Goap
         public static readonly IGoapAction ActionStub = new GoapAction(
             name: nameof(ActionStub),
             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
-            conditions: new LocalState(EnemyAlive(true)),
+            conditions: new LocalState(EnemyExists(true)),
             isValid: () => true,
             cost: () => 10
         );

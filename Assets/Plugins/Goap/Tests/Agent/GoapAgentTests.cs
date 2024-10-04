@@ -4,6 +4,9 @@ using System.Linq;
 using NUnit.Framework;
 using static AI.Goap.Substitutes;
 
+// ReSharper disable ArgumentsStyleOther
+// ReSharper disable ArgumentsStyleAnonymousFunction
+
 namespace AI.Goap
 {
     public sealed class GoapAgentTests
@@ -287,7 +290,9 @@ namespace AI.Goap
         private static IEnumerable<TestCaseData> PlanSuccessfulCases()
         {
             yield return MockPlannerCase();
+            yield return RangeCombatHardAStarCase();
         }
+
 
         private static TestCaseData MockPlannerCase()
         {
@@ -316,6 +321,125 @@ namespace AI.Goap
                 )
                 .SetName("Mock Planner")
                 .SetCategory("Primitive");
+        }
+
+        private static TestCaseData RangeCombatHardAStarCase()
+        {
+            var planner = new AStarPlanner();
+            var goals = new IGoapGoal[]
+            {
+                new GoapGoal(
+                    "DestroyEnemy",
+                    () => true,
+                    () => 5,
+                    EnemyExists(false)
+                ),
+                new GoapGoal(
+                    "SelfTreatment",
+                    () => true,
+                    () => 3,
+                    Injured(false)
+                ),
+                new GoapGoal(
+                    "CollectResources",
+                    () => true,
+                    () => 1,
+                    ResourcesCollected(true)
+                )
+            };
+            var actions = new[]
+            {
+                new GoapAction(
+                    "SelfTreatment",
+                    effects: new LocalState(Injured(false)),
+                    conditions: new LocalState(),
+                    isValid: () => true,
+                    cost: () => 10
+                ),
+
+
+                //Melee branch: weight: 16
+                new GoapAction(
+                    "MeleeCombat",
+                    effects: new LocalState(EnemyExists(false)),
+                    conditions: new LocalState(AtEnemy(true)),
+                    isValid: () => true,
+                    cost: () => 10 //heuristic: 1
+                ),
+                new GoapAction(
+                    "MoveAtEnemy",
+                    effects: new LocalState(AtEnemy(true), NearEnemy(true)),
+                    conditions: new LocalState(EnemyExists(true)),
+                    isValid: () => true,
+                    cost: () => 5 //heuristic: 0
+                ),
+
+
+                //Range branch: 9
+                new GoapAction(
+                    "RangeCombat",
+                    effects: new LocalState(EnemyExists(false)),
+                    conditions: new LocalState(HasAmmo(true), NearEnemy(true)),
+                    isValid: () => true,
+                    cost: () => 1 //heuristic: 2
+                ),
+                new GoapAction(
+                    "MoveNearEnemy",
+                    effects: new LocalState(NearEnemy(true)),
+                    conditions: new LocalState(EnemyExists(true)),
+                    isValid: () => true,
+                    cost: () => 2 //heuristic: 0
+                ),
+                new GoapAction(
+                    "PickUpAmmo",
+                    effects: new LocalState(HasAmmo(true)),
+                    conditions: new LocalState(),
+                    isValid: () => true,
+                    cost: () => 4 //heuristic: 0
+                ),
+
+                //Gathering
+                new GoapAction(
+                    "GatherResource",
+                    effects: new LocalState(ResourceExists(false)),
+                    conditions: new LocalState(AtResource(true)),
+                    isValid: () => true,
+                    cost: () => 2 //heuristic: 0
+                ),
+                new GoapAction(
+                    "MoveAtResource",
+                    effects: new LocalState(AtResource(true)),
+                    conditions: new LocalState(ResourceExists(true)),
+                    isValid: () => true,
+                    cost: () => 3 //heuristic: 0
+                )
+            };
+            var sensors = new IGoapSensor[]
+            {
+                new GoapSensor("Injured", ws => ws["Injured"] = true),
+                new GoapSensor("Enemy", ws =>
+                {
+                    ws["EnemyExists"] = true;
+                    ws["NearEnemy"] = false;
+                    ws["AtEnemy"] = false;
+                }),
+                new GoapSensor("Resource", ws =>
+                {
+                    ws["ResourceExists"] = true;
+                    ws["NearResource"] = false;
+                })
+            };
+
+            return new TestCaseData(
+                    planner,
+                    goals,
+                    actions,
+                    sensors,
+                    "DestroyEnemy",
+                    new[] {"PickUpAmmo", "MoveNearEnemy", "RangeCombat"}
+                )
+                .SetName("Range Combat AStar Planner")
+                .SetCategory("Hard");
         }
     }
 }
