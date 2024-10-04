@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Pool;
 
 namespace AI.Goap
 {
@@ -8,25 +9,66 @@ namespace AI.Goap
         private readonly List<IGoapGoal> goals;
         private readonly List<IGoapAction> actions;
         private readonly List<IGoapSensor> sensors;
-        private readonly WorldState worldState;
-
-        private IGoapPlanner _planner;
+        
+        private WorldState worldState;
+        private IGoapPlanner planner;
 
         public GoapAgent(
             in IGoapPlanner planner,
             in IEnumerable<IGoapGoal> goals = null,
             in IEnumerable<IGoapAction> actions = null,
-            in IEnumerable<IGoapSensor> sensors = null,
-            in WorldState worldState = null
+            in IEnumerable<IGoapSensor> sensors = null
         )
         {
-            _planner = planner ?? throw new ArgumentNullException(nameof(planner));
-
+            this.planner = planner ?? throw new ArgumentNullException(nameof(planner));
             this.goals = goals != null ? new List<IGoapGoal>(goals) : new List<IGoapGoal>();
             this.actions = actions != null ? new List<IGoapAction>(actions) : new List<IGoapAction>();
             this.sensors = sensors != null ? new List<IGoapSensor>(sensors) : new List<IGoapSensor>();
-            this.worldState = worldState ?? new WorldState();
+            this.worldState = new WorldState();
         }
+
+        public bool Decide(out List<IGoapAction> plan, out IGoapGoal goal, bool syncState = true)
+        {
+            plan = new List<IGoapAction>();
+            return this.Decide(plan, out goal, syncState);
+        }
+
+        public bool Decide(List<IGoapAction> plan, out IGoapGoal goal, bool syncState = true)
+        {
+            if (!this.GetPriorityGoal(out goal))
+                return false;
+
+            bool success = false;
+
+            var actions = ListPool<IGoapAction>.Get();
+            this.GetValidActions(actions);
+
+            if (actions.Count == 0)
+                goto EndPoint;
+
+            if (syncState) 
+                this.SyncWorldState();
+
+            success = this.planner.Plan(this.worldState, goal, actions, plan);
+            
+            EndPoint:
+            ListPool<IGoapAction>.Release(actions);
+            return success;
+        }
+        
+        #region Planner
+
+        public IGoapPlanner GetPlanner()
+        {
+            return this.planner;
+        }
+
+        public void SetPlanner(IGoapPlanner planner)
+        {
+            this.planner = planner;
+        } 
+
+        #endregion
 
         #region Goals
 
@@ -55,6 +97,11 @@ namespace AI.Goap
         public bool ContainsGoal(in IGoapGoal goal)
         {
             return goal != null && this.goals.Contains(goal);
+        }
+
+        public void ClearGoals()
+        {
+            this.goals.Clear();
         }
 
         internal bool GetPriorityGoal(out IGoapGoal result)
@@ -109,11 +156,16 @@ namespace AI.Goap
         {
             return action != null && this.actions.Contains(action);
         }
-        
+
+        public void ClearActions()
+        {
+            this.actions.Clear();
+        }
+
         internal void GetValidActions(List<IGoapAction> results)
         {
             results.Clear();
-            
+
             for (int i = 0, count = this.actions.Count; i < count; i++)
             {
                 IGoapAction action = this.actions[i];
@@ -123,7 +175,7 @@ namespace AI.Goap
                 }
             }
         }
-        
+
         #endregion
 
         #region Sensors
@@ -155,6 +207,11 @@ namespace AI.Goap
             return sensor != null && this.sensors.Contains(sensor);
         }
 
+        public void ClearSensors()
+        {
+            this.sensors.Clear();
+        }
+
         #endregion
 
         #region WorldState
@@ -162,6 +219,22 @@ namespace AI.Goap
         public IGoapState GetWorldState()
         {
             return this.worldState;
+        }
+
+        internal void SetWorldState(WorldState worldState)
+        {
+            this.worldState = worldState;
+        }
+        
+        internal void SyncWorldState()
+        {
+            this.worldState.Clear();
+
+            for (int i = 0, count = this.sensors.Count; i < count; i++)
+            {
+                IGoapSensor sensor = this.sensors[i];
+                sensor.PopulateState(this.worldState);
+            }
         }
 
         #endregion

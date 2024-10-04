@@ -18,7 +18,8 @@ namespace AI.Goap
             var worldState = new WorldState(Injured(false), HasAmmo(true));
 
             //Act:
-            var agent = new GoapAgent(new AStarPlanner(), goals, actions, sensors, worldState);
+            var agent = new GoapAgent(new AStarPlanner(), goals, actions, sensors);
+            agent.SetWorldState(worldState);
 
             //Assert:
             Assert.IsNotNull(agent);
@@ -163,10 +164,158 @@ namespace AI.Goap
                 .SetCategory("Primitive");
         }
 
+        [TestCaseSource(nameof(SyncWorldStateCases))]
+        public void SyncWorldState(IGoapSensor[] sensors, WorldState expectedState)
+        {
+            //Arrange:
+            var agent = new GoapAgent(new PlannerMock(), null, null, sensors);
+            agent.SetWorldState(new WorldState(
+                new KeyValuePair<string, bool>("A", true),
+                new KeyValuePair<string, bool>("B", false),
+                new KeyValuePair<string, bool>("C", true),
+                new KeyValuePair<string, bool>("D", false)
+            ));
 
-        // public void MakePlan()
-        // {
-        //     
-        // }
+            //Act:
+            agent.SyncWorldState();
+
+            //Assert:
+            Assert.AreEqual(expectedState, agent.GetWorldState());
+        }
+
+        private static IEnumerable<TestCaseData> SyncWorldStateCases()
+        {
+            yield return new TestCaseData(
+                new IGoapSensor[]
+                {
+                    new GoapSensor("Injured", ws => ws["Injured"] = false),
+                    new GoapSensor("EnemyAlive", ws => ws["EnemyAlive"] = true)
+                },
+                new WorldState(
+                    new KeyValuePair<string, bool>("Injured", false),
+                    new KeyValuePair<string, bool>("EnemyAlive", true)
+                ));
+        }
+
+        [TestCaseSource(nameof(DecideFailedCases))]
+        public void DecideFailed(IGoapGoal[] goals, IGoapAction[] actions, string expectedGoal)
+        {
+            //Arrange:
+            var agent = new GoapAgent(new PlannerMock(), goals, actions);
+
+            //Act:
+            var plan = new List<IGoapAction>();
+            bool success = agent.Decide(plan, out IGoapGoal goal);
+
+            //Assert:
+            Assert.IsFalse(success);
+            Assert.AreEqual(expectedGoal, goal?.Name);
+            Assert.AreEqual(0, plan.Count);
+        }
+
+        private static IEnumerable<TestCaseData> DecideFailedCases()
+        {
+            yield return new TestCaseData(
+                    Array.Empty<IGoapGoal>(),
+                    new[] {ActionStub},
+                    null
+                )
+                .SetName("Goal collection is empty")
+                .SetCategory("Primitive");
+
+            yield return new TestCaseData(
+                    new IGoapGoal[]
+                    {
+                        new GoapGoal("A", () => false, () => 5, null),
+                        new GoapGoal("B", () => false, () => 10, null),
+                        new GoapGoal("C", () => false, () => 3, null),
+                        new GoapGoal("D", () => false, () => 10, null)
+                    },
+                    new[] {ActionStub},
+                    null
+                )
+                .SetName("No valid goals")
+                .SetCategory("Primitive");
+
+            yield return new TestCaseData(
+                    new[] {GoalStub},
+                    Array.Empty<IGoapAction>(),
+                    GoalStub.Name
+                )
+                .SetName("Action collection is empty")
+                .SetCategory("Primitive");
+
+            yield return new TestCaseData(
+                    new[] {GoalStub},
+                    new IGoapAction[]
+                    {
+                        new GoapAction("A", null, null, () => false, () => 5),
+                        new GoapAction("B", null, null, () => false, () => 10),
+                        new GoapAction("C", null, null, () => false, () => 3),
+                        new GoapAction("D", null, null, () => false, () => 10)
+                    },
+                    GoalStub.Name
+                )
+                .SetName("No valid actions")
+                .SetCategory("Primitive");
+        }
+
+        [TestCaseSource(nameof(PlanSuccessfulCases))]
+        public void DecideSuccessful(
+            IGoapPlanner planner,
+            IGoapGoal[] goals,
+            IGoapAction[] actions,
+            IGoapSensor[] sensors,
+            string expectedGoal,
+            string[] expectedPlan
+        )
+        {
+            //Arrange:
+            var agent = new GoapAgent(planner, goals, actions, sensors);
+
+            //Act:
+            var actualPlan = new List<IGoapAction>();
+            bool success = agent.Decide(actualPlan, out IGoapGoal actualGoal);
+
+            //Assert:
+            Assert.IsTrue(success);
+            Assert.AreEqual(expectedGoal, actualGoal.Name);
+            Assert.AreEqual(expectedPlan.Length, actualPlan.Count);
+            Assert.AreEqual(expectedPlan, actualPlan.Select(it => it.Name).ToArray());
+        }
+
+        private static IEnumerable<TestCaseData> PlanSuccessfulCases()
+        {
+            yield return MockPlannerCase();
+        }
+
+        private static TestCaseData MockPlannerCase()
+        {
+            var a1 = new GoapAction("A", null, null, () => false, () => 5);
+            var a2 = new GoapAction("B", null, null, () => true, () => 10);
+            var a3 = new GoapAction("C", null, null, () => true, () => 3);
+            var a4 = new GoapAction("D", null, null, () => true, () => 10);
+
+            var g1 = new GoapGoal("G1", () => false, () => 5, null);
+            var g2 = new GoapGoal("G2", () => true, () => 10, null);
+            var g3 = new GoapGoal("G3", () => false, () => 3, null);
+            var g4 = new GoapGoal("G4", () => false, () => 15, null);
+
+            return new TestCaseData(
+                    new PlannerMock((_, _, actions, plan) =>
+                    {
+                        plan.Add(actions[0]);
+                        plan.Add(actions[2]);
+                        return true;
+                    }),
+                    new[] {g1, g2, g3, g4},
+                    new[] {a1, a2, a3, a4},
+                    Array.Empty<IGoapSensor>(),
+                    "G2",
+                    new[] {"B", "D"}
+                )
+                .SetName("Mock Planner")
+                .SetCategory("Primitive");
+        }
     }
 }

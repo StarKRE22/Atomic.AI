@@ -22,11 +22,22 @@ namespace AI.Goap
         public bool this[in string key]
         {
             get { return this.pairs[key]; }
+            set { this.pairs[key] = value; }
         }
 
         public bool TryGetValue(in string key, out bool value)
         {
             return this.pairs.TryGetValue(key, out value);
+        }
+
+        public bool Remove(string key)
+        {
+            return this.pairs.Remove(key);
+        }
+        
+        public void Clear()
+        {
+            this.pairs.Clear();
         }
 
         public bool Overlaps(in KeyValuePair<string, bool> other)
