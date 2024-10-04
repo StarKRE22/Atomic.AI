@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 
 // ReSharper disable UseDeconstruction
 
@@ -7,6 +8,7 @@ namespace AI.Goap
 {
     public sealed class WorldState : IGoapState
     {
+        [ShowInInspector, ReadOnly, InlineProperty]
         private readonly Dictionary<string, bool> pairs;
 
         public WorldState()

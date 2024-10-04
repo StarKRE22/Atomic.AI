@@ -9,8 +9,8 @@ namespace AI.Goap
         private readonly List<IGoapGoal> goals;
         private readonly List<IGoapAction> actions;
         private readonly List<IGoapSensor> sensors;
-        
         private WorldState worldState;
+        
         private IGoapPlanner planner;
 
         public GoapAgent(
@@ -25,6 +25,7 @@ namespace AI.Goap
             this.actions = actions != null ? new List<IGoapAction>(actions) : new List<IGoapAction>();
             this.sensors = sensors != null ? new List<IGoapSensor>(sensors) : new List<IGoapSensor>();
             this.worldState = new WorldState();
+            this.SyncWorldState();
         }
 
         public bool Decide(out List<IGoapAction> plan, out IGoapGoal goal, bool syncState = true)

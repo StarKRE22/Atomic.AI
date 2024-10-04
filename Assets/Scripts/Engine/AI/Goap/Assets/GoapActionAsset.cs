@@ -1,6 +1,7 @@
 using System;
 using AI.Goap;
 using Atomic.AI;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Game.Engine
@@ -8,20 +9,21 @@ namespace Game.Engine
     [Serializable]
     public sealed class GoapActionAsset : IGoapActionAsset<IBlackboard>
     {
+        [GUIColor(1f, 0.92156863f, 0.015686275f)]
         [SerializeField]
         private string name;
 
         [SerializeField]
-        private SerializedFact[] effects;
+        private StateProperty[] effects;
 
         [SerializeField]
-        private SerializedFact[] conditions;
+        private StateProperty[] conditions;
 
         [SerializeReference]
         private IBlackboardCondition isValid = null;
 
         [SerializeReference]
-        private IIntBlackboardFunction cost = null;
+        private IBlackboardInt cost = null;
 
         public IGoapAction Create(IBlackboard source)
         {

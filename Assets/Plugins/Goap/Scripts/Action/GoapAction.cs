@@ -4,13 +4,12 @@ namespace AI.Goap
 {
     public sealed class GoapAction : IGoapAction
     {
-        public LocalState Effects => _effects;
-        public LocalState Conditions => _conditions;
-
         public string Name => _name;
         public bool IsValid => _isValid.Invoke();
         public int Cost => _cost.Invoke();
-
+        public LocalState Effects => _effects;
+        public LocalState Conditions => _conditions;
+        
         private readonly string _name;
         private readonly LocalState _effects;
         private readonly LocalState _conditions;

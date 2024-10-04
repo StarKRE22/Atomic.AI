@@ -16,7 +16,7 @@ namespace AI.Goap
         public GoapAgent Create(TSource source)
         {
             return new GoapAgent(
-                this.planner.Create(),
+                this.planner?.Create(),
                 this.Goals?.Select(it => it.Create(source)),
                 this.Actions?.Select(it => it.Create(source)),
                 this.Sensors?.Select(it => it.Create(source))

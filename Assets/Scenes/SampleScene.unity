@@ -516,6 +516,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   installers:
   - rid: 4770164228801167360
+  - rid: 4770164228801167361
+  - rid: 4770164228801167370
+  - rid: 4770164228801167371
   references:
     version: 2
     RefIds:
@@ -524,6 +527,86 @@ MonoBehaviour:
       data:
         key: 1
         value: {fileID: 1376597734}
+    - rid: 4770164228801167361
+      type: {class: GoapAgentInstaller, ns: Game.Engine, asm: Assembly-CSharp}
+      data:
+        agentAsset:
+          planner:
+            rid: 4770164228801167362
+          goals:
+          - name: DestroyEnemy
+            result:
+            - key: HasEnemy
+              value: 0
+            isValid:
+              rid: 4770164228801167363
+            priority:
+              rid: 4770164228801167364
+          actions:
+          - name: MeleeCombat
+            effects:
+            - key: HasEnemy
+              value: 0
+            conditions:
+            - key: AtEnemy
+              value: 1
+            isValid:
+              rid: 4770164228801167365
+            cost:
+              rid: 4770164228801167366
+          - name: MoveAtEnemy
+            effects:
+            - key: AtEnemy
+              value: 1
+            conditions: []
+            isValid:
+              rid: 4770164228801167367
+            cost:
+              rid: 4770164228801167368
+          sensors:
+          - name: Enemy
+            onPopulate:
+              rid: 4770164228801167369
+    - rid: 4770164228801167362
+      type: {class: AStarPlannerAsset, ns: AI.Goap, asm: Goap}
+      data:
+        heuristicPoints: 1
+        heuristicUndefined: 2147483647
+    - rid: 4770164228801167363
+      type: {class: HasEnemyBlackboardCondition, ns: Engine, asm: Assembly-CSharp}
+      data: 
+    - rid: 4770164228801167364
+      type: {class: BlackboardIntConst, ns: Game.Engine, asm: Atomic.AI.Elements}
+      data:
+        value: 10
+    - rid: 4770164228801167365
+      type: {class: HasEnemyBlackboardCondition, ns: Engine, asm: Assembly-CSharp}
+      data: 
+    - rid: 4770164228801167366
+      type: {class: BlackboardIntConst, ns: Game.Engine, asm: Atomic.AI.Elements}
+      data:
+        value: 2
+    - rid: 4770164228801167367
+      type: {class: HasEnemyBlackboardCondition, ns: Engine, asm: Assembly-CSharp}
+      data: 
+    - rid: 4770164228801167368
+      type: {class: DistanceToTargetCostBlackboardFunction, ns: Engine, asm: Assembly-CSharp}
+      data:
+        multiplier: 1
+        targetKey: 3
+    - rid: 4770164228801167369
+      type: {class: EnemySensor, ns: Game.Engine, asm: Assembly-CSharp}
+      data: 
+    - rid: 4770164228801167370
+      type: {class: FloatInstaller, ns: Atomic.AI, asm: Modules.AI.Blackboard}
+      data:
+        key: 4
+        value: 2
+    - rid: 4770164228801167371
+      type: {class: FloatInstaller, ns: Atomic.AI, asm: Modules.AI.Blackboard}
+      data:
+        key: 5
+        value: 5
 --- !u!1001 &8439922381674226156
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -15,8 +15,16 @@ MonoBehaviour:
   Namespace: Game
   directoryPath: Assets/Scripts/Codegen
   className: BlackboardAPI
-  imports: []
+  imports:
+  - UnityEngine
+  - AI.Goap
   keys:
   - id: 0
     name: UNDEFINED
     type: 
+  - id: 1
+    name: Character
+    type: 'GameObject : class'
+  - id: 2
+    name: GoapAgent
+    type: 'GoapAgent : class'

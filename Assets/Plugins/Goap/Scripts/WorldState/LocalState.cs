@@ -9,7 +9,7 @@ namespace AI.Goap
         public int Count => this.pairs.Length;
         
         private readonly KeyValuePair<string, bool>[] pairs;
-
+        
         public LocalState(IEnumerable<KeyValuePair<string, bool>> pairs)
         {
             this.pairs = pairs.ToArray();
