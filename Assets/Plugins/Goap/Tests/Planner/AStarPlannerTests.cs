@@ -23,6 +23,7 @@ namespace AI.Goap
             Assert.AreEqual(int.MaxValue, planner.heuristicUndefined);
         }
 
+        //TODO: CHECK PLAN NULL!
         [TestCaseSource(nameof(ArgumentNullExceptionCases))]
         public void ArgumentNullException(WorldState worldState, IGoapGoal goal, IGoapAction[] actions)
         {
@@ -320,21 +321,27 @@ namespace AI.Goap
         private static TestCaseData RangeCombatWithAmmoCase()
         {
             return new TestCaseData(
+                    
                     new WorldState(
                         EnemyExists(true),
-                        NearEnemy(false),
                         AtEnemy(false),
+                        NearEnemy(false),
                         HasAmmo(false)
                     ),
+                    
                     new GoapGoal(
                         "Destroy Enemy",
                         isValid: () => true,
                         priority: () => 1,
                         result: EnemyExists(false)
                     ),
+                    
+                    
                     new[]
                     {
                         //Melee branch: weight: 16
+                        
+                        
                         new GoapAction(
                             "MeleeCombat",
                             effects: new LocalState(EnemyExists(false)),
@@ -342,6 +349,9 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 10 //heuristic: 1
                         ),
+                        
+                        
+                        
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
@@ -349,6 +359,8 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 5 //heuristic: 0
                         ),
+                        
+                        
 
                         //Range branch: 9
                         new GoapAction(
@@ -358,6 +370,8 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 1 //heuristic: 2
                         ),
+                        
+                        
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
@@ -365,6 +379,8 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 2 //heuristic: 0
                         ),
+                        
+                        
                         new GoapAction(
                             "PickUpAmmo",
                             effects: new LocalState(HasAmmo(true)),

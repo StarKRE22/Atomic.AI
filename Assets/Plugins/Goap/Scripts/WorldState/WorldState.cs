@@ -27,6 +27,11 @@ namespace AI.Goap
             set { this.pairs[key] = value; }
         }
 
+        public void Add(in string key, in bool value)
+        {
+            this.pairs.Add(key, value);
+        }
+        
         public bool TryGetValue(in string key, out bool value)
         {
             return this.pairs.TryGetValue(key, out value);

@@ -9,8 +9,8 @@ namespace AI.Goap
         private readonly List<IGoapGoal> goals;
         private readonly List<IGoapAction> actions;
         private readonly List<IGoapSensor> sensors;
+
         private WorldState worldState;
-        
         private IGoapPlanner planner;
 
         public GoapAgent(
@@ -28,35 +28,38 @@ namespace AI.Goap
             this.SyncWorldState();
         }
 
-        public bool Decide(out List<IGoapAction> plan, out IGoapGoal goal, bool syncState = true)
+        public bool Decide(out List<IGoapAction> plan, out IGoapGoal goal, in bool syncState = true)
         {
             plan = new List<IGoapAction>();
             return this.Decide(plan, out goal, syncState);
         }
 
-        public bool Decide(List<IGoapAction> plan, out IGoapGoal goal, bool syncState = true)
+        public bool Decide(List<IGoapAction> plan, out IGoapGoal goal, in bool syncState = true)
         {
+            if (plan == null)
+                throw new ArgumentNullException(nameof(plan));
+
             if (!this.GetPriorityGoal(out goal))
                 return false;
 
             bool success = false;
 
-            var actions = ListPool<IGoapAction>.Get();
+            List<IGoapAction> actions = ListPool<IGoapAction>.Get();
             this.GetValidActions(actions);
 
             if (actions.Count == 0)
                 goto EndPoint;
 
-            if (syncState) 
+            if (syncState)
                 this.SyncWorldState();
 
             success = this.planner.Plan(this.worldState, goal, actions, plan);
-            
+
             EndPoint:
             ListPool<IGoapAction>.Release(actions);
             return success;
         }
-        
+
         #region Planner
 
         public IGoapPlanner GetPlanner()
@@ -67,7 +70,7 @@ namespace AI.Goap
         public void SetPlanner(IGoapPlanner planner)
         {
             this.planner = planner;
-        } 
+        }
 
         #endregion
 
@@ -226,7 +229,7 @@ namespace AI.Goap
         {
             this.worldState = worldState;
         }
-        
+
         internal void SyncWorldState()
         {
             this.worldState.Clear();

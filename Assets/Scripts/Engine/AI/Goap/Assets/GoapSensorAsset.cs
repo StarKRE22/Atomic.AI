@@ -20,7 +20,7 @@ namespace Game.Engine
         {
             return new GoapSensor(
                 this.name,
-                ws => this.onPopulate.Invoke(source, ws)
+                worldState => this.onPopulate.Invoke(source, worldState)
             );
         }
     }

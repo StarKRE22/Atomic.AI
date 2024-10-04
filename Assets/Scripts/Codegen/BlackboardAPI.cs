@@ -14,6 +14,7 @@ namespace Game
         public const int Enemy = 3; // GameObject : class
         public const int MeleeDistance = 4; // float
         public const int RangeDistance = 5; // float
+        public const int Resource = 6; // GameObject : class
 
 
         ///Extensions
@@ -95,6 +96,22 @@ namespace Game
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool DelRangeDistance(this IBlackboard obj) => obj.DelFloat(RangeDistance);
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasResource(this IBlackboard obj) => obj.HasObject(Resource);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static GameObject  GetResource(this IBlackboard obj) => obj.GetObject<GameObject >(Resource);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetResource(this IBlackboard obj, out GameObject  value) => obj.TryGetObject(Resource, out value);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void SetResource(this IBlackboard obj, GameObject  value) => obj.SetObject(Resource, value);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool DelResource(this IBlackboard obj) => obj.DelObject(Resource);
 
     }
 }

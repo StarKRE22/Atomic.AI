@@ -48,6 +48,9 @@ namespace AI.Goap
             if (actions == null)
                 throw new ArgumentNullException(nameof(actions));
 
+            if (plan == null)
+                throw new ArgumentNullException(nameof(plan));
+
             return this.PlanInternal(worldState, goal, actions, plan);
         }
 
@@ -61,6 +64,7 @@ namespace AI.Goap
             plan.Clear();
 
             LocalState goalState = goal.Result;
+
             if (!worldState.OverlapsKeys(goalState))
                 return false;
 
@@ -69,7 +73,7 @@ namespace AI.Goap
 
             if (actions.Count == 0)
                 return false;
-            
+
             var openList = DictionaryPool<IGoapAction, Node>.Get();
             var closedList = HashSetPool<IGoapAction>.Get();
             var complete = false;
@@ -114,8 +118,8 @@ namespace AI.Goap
                     continue;
 
                 int cost = action.Cost;
-                int heuristic = this.GetHeuristic(worldState, action.Conditions);
-                int weight = cost + heuristic;
+                int heuristic = this.GetHeuristic(worldState, action.Conditions); //MaxValue
+                int weight = cost + heuristic; //TODO: Overflow!
 
                 Node node = new Node
                 {
@@ -134,7 +138,7 @@ namespace AI.Goap
             {
                 int cost = neighbour.Cost;
                 int heuristic = this.GetHeuristic(worldState, neighbour.Conditions);
-                int weight = cost + heuristic;
+                int weight = cost + heuristic; //OVERFLOW
 
                 Node node = new Node
                 {
@@ -300,7 +304,7 @@ namespace AI.Goap
             neighbour = default;
             List<IGoapAction> sequence = ListPool<IGoapAction>.Get();
 
-            for (int i = 0, conditionCount = conditions.Count; i < conditionCount; i++)
+            for (int i = 0, count = conditions.Count; i < count; i++)
             {
                 KeyValuePair<string, bool> condition = conditions[i];
                 if (worldState.Overlaps(condition))
@@ -350,9 +354,10 @@ namespace AI.Goap
         internal sealed class Node
         {
             public IGoapAction action;
+            public Node previous;
+
             public int heuristic;
             public int cost;
-            public Node previous;
             public int weight;
         }
     }

@@ -41,6 +41,16 @@ namespace AI.Goap
             }, "planner");
         }
 
+        [Test]
+        public void WhenDesideWithNullPlanThenThrowsException()
+        {
+            //Arrange:
+            var agent = new GoapAgent(new PlannerMock());
+
+            //Assert:
+            Assert.Catch<ArgumentNullException>(() => agent.Decide(plan: null, out _), "plan");
+        }
+
         [TestCaseSource(nameof(FindPriorityGoalSuccessfulCases))]
         public void FindPriorityGoalSuccessful(IGoapGoal[] goals, string expectedGoal)
         {
