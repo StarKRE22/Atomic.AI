@@ -15,7 +15,7 @@ namespace AI.Goap
         internal readonly int heuristicPoints;
         internal readonly int heuristicUndefined;
 
-        public AStarPlanner(int heuristicPoints = 1, int heuristicUndefined = int.MaxValue)
+        public AStarPlanner(int heuristicPoints = 1, int heuristicUndefined = int.MaxValue / 2)
         {
             this.heuristicPoints = heuristicPoints;
             this.heuristicUndefined = heuristicUndefined;
@@ -117,17 +117,12 @@ namespace AI.Goap
                 if (!this.IsNeighbour(action, goalState, worldState))
                     continue;
 
-                int cost = action.Cost;
-                int heuristic = this.GetHeuristic(worldState, action.Conditions); //MaxValue
-                int weight = cost + heuristic; //TODO: Overflow!
-
                 Node node = new Node
                 {
                     action = action,
                     previous = null,
-                    cost = cost,
-                    heuristic = heuristic,
-                    weight = weight
+                    cost = action.Cost,
+                    heuristic = this.GetHeuristic(worldState, action),
                 };
 
                 openList.Add(action, node);
@@ -136,17 +131,12 @@ namespace AI.Goap
 
             if (neighbours == 0 && this.CreateNeighbour(goalState, worldState, actions, out IGoapAction neighbour))
             {
-                int cost = neighbour.Cost;
-                int heuristic = this.GetHeuristic(worldState, neighbour.Conditions);
-                int weight = cost + heuristic; //OVERFLOW
-
                 Node node = new Node
                 {
                     action = neighbour,
                     previous = null,
-                    cost = cost,
-                    heuristic = heuristic,
-                    weight = weight
+                    cost = neighbour.Cost,
+                    heuristic = this.GetHeuristic(worldState, neighbour)
                 };
 
                 openList.Add(neighbour, node);
@@ -154,17 +144,17 @@ namespace AI.Goap
         }
 
         internal void VisitAction(
-            in Node node,
+            in Node visitingNode,
             in WorldState worldState,
             in IReadOnlyList<IGoapAction> actions,
             in Dictionary<IGoapAction, Node> openList,
             in HashSet<IGoapAction> closedList
         )
         {
-            LocalState conditions = node.action.Conditions;
-            int weight = node.weight;
-
-            int satisfied = 0;
+            LocalState conditions = visitingNode.action.Conditions;
+            
+            int pathCost = visitingNode.cost;
+            int neighbours = 0;
 
             for (int i = 0, count = actions.Count; i < count; i++)
             {
@@ -178,45 +168,38 @@ namespace AI.Goap
 
                 if (openList.TryGetValue(action, out Node actionNode))
                 {
-                    int actionWeight = weight + actionNode.cost + actionNode.heuristic;
-                    if (actionNode.weight > actionWeight)
+                    int cost = pathCost + actionNode.cost;
+                    if (actionNode.cost > cost)
                     {
-                        actionNode.previous = node;
-                        actionNode.weight = actionWeight;
+                        actionNode.previous = visitingNode;
+                        actionNode.cost = cost;
                     }
                 }
                 else
                 {
-                    int cost = action.Cost;
-                    int heuristic = this.GetHeuristic(worldState, action.Conditions);
-
                     actionNode = new Node
                     {
                         action = action,
-                        previous = node,
-                        cost = cost,
-                        heuristic = heuristic,
-                        weight = weight + cost + heuristic
+                        previous = visitingNode,
+                        cost = pathCost + action.Cost,
+                        heuristic = this.GetHeuristic(worldState, action)
                     };
 
                     openList.Add(action, actionNode);
                 }
 
-                satisfied++;
+                neighbours++;
             }
 
-            if (satisfied == 0 && this.CreateNeighbour(conditions, worldState, actions, out IGoapAction neighbour))
+            if (neighbours == 0 && this.CreateNeighbour(conditions, worldState, actions, out IGoapAction neighbour))
             {
-                int cost = neighbour.Cost;
-                int heuristic = this.GetHeuristic(worldState, neighbour.Conditions);
 
                 Node actionNode = new Node
                 {
                     action = neighbour,
-                    previous = node,
-                    cost = cost,
-                    heuristic = heuristic,
-                    weight = cost + heuristic
+                    previous = visitingNode,
+                    cost = pathCost + neighbour.Cost,
+                    heuristic = this.GetHeuristic(worldState, neighbour)
                 };
 
                 openList.Add(neighbour, actionNode);
@@ -230,7 +213,7 @@ namespace AI.Goap
 
             foreach (Node node in openList.Values)
             {
-                int weight = node.weight;
+                int weight = node.Weight;
                 if (weight < minWeight)
                 {
                     result = node;
@@ -260,13 +243,14 @@ namespace AI.Goap
             }
         }
 
-        internal int GetHeuristic(in WorldState worldState, in LocalState localState)
+        internal int GetHeuristic(in WorldState worldState, in IGoapAction action)
         {
             int result = 0;
-
-            for (int i = 0, count = localState.Count; i < count; i++)
+            LocalState conditions = action.Conditions;
+            
+            for (int i = 0, count = conditions.Count; i < count; i++)
             {
-                KeyValuePair<string, bool> condition = localState[i];
+                KeyValuePair<string, bool> condition = conditions[i];
                 if (worldState.TryGetValue(condition.Key, out bool value))
                 {
                     if (value != condition.Value)
@@ -277,7 +261,7 @@ namespace AI.Goap
                     return this.heuristicUndefined;
                 }
             }
-
+            
             return result;
         }
 
@@ -355,10 +339,13 @@ namespace AI.Goap
         {
             public IGoapAction action;
             public Node previous;
-
             public int heuristic;
             public int cost;
-            public int weight;
+            
+            public int Weight
+            {
+                get { return this.cost + this.heuristic; }
+            }
         }
     }
 }

@@ -542,6 +542,14 @@ MonoBehaviour:
               rid: 4770164228801167363
             priority:
               rid: 4770164228801167364
+          - name: HarvestResources
+            result:
+            - key: ResourceHarvested
+              value: 1
+            isValid:
+              rid: 4770164228801167372
+            priority:
+              rid: 4770164228801167376
           actions:
           - name: MeleeCombat
             effects:
@@ -607,6 +615,23 @@ MonoBehaviour:
       data:
         key: 5
         value: 5
+    - rid: 4770164228801167372
+      type: {class: AndBlackboardCondition, ns: Atomic.AI, asm: Atomic.AI.Elements}
+      data:
+        conditions:
+        - rid: 4770164228801167373
+        - rid: 4770164228801167374
+    - rid: 4770164228801167373
+      type: {class: HasEnemyBlackboardCondition, ns: Engine, asm: Assembly-CSharp}
+      data: 
+    - rid: 4770164228801167374
+      type: {class: HasResourceBlackboardCondition, ns: Engine, asm: Assembly-CSharp}
+      data: 
+    - rid: 4770164228801167376
+      type: {class: DistanceToTargetCostBlackboardFunction, ns: Engine, asm: Assembly-CSharp}
+      data:
+        multiplier: 2
+        targetKey: 6
 --- !u!1001 &8439922381674226156
 PrefabInstance:
   m_ObjectHideFlags: 0

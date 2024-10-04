@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using UnityEngine;
 using static AI.Goap.Substitutes;
 
 // ReSharper disable ArgumentsStyleOther
@@ -293,6 +294,12 @@ namespace AI.Goap
             //Assert:
             Assert.IsTrue(success);
             Assert.AreEqual(expectedGoal, actualGoal.Name);
+
+            foreach (IGoapAction action in actualPlan)
+            {
+                Debug.Log($"ACTION {action.Name}");
+            }
+            
             Assert.AreEqual(expectedPlan.Length, actualPlan.Count);
             Assert.AreEqual(expectedPlan, actualPlan.Select(it => it.Name).ToArray());
         }
@@ -429,9 +436,13 @@ namespace AI.Goap
                 new GoapSensor("Injured", ws => ws["Injured"] = true),
                 new GoapSensor("Enemy", ws =>
                 {
-                    ws["EnemyExists"] = true;
-                    ws["NearEnemy"] = false;
-                    ws["AtEnemy"] = false;
+                    ws[nameof(EnemyExists)] = true;
+                    ws[nameof(NearEnemy)] = false;
+                    ws[nameof(AtEnemy)] = false;
+                }),
+                new GoapSensor("Ammo", ws =>
+                {
+                    ws[nameof(HasAmmo)] = false;
                 }),
                 new GoapSensor("Resource", ws =>
                 {

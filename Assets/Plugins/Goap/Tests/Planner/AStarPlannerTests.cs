@@ -20,30 +20,52 @@ namespace AI.Goap
 
             //Assert:
             Assert.AreEqual(1, planner.heuristicPoints);
-            Assert.AreEqual(int.MaxValue, planner.heuristicUndefined);
+            Assert.AreEqual(int.MaxValue / 2, planner.heuristicUndefined);
         }
-
-        //TODO: CHECK PLAN NULL!
+        
         [TestCaseSource(nameof(ArgumentNullExceptionCases))]
-        public void ArgumentNullException(WorldState worldState, IGoapGoal goal, IGoapAction[] actions)
+        public void ArgumentNullException(
+            WorldState worldState,
+            IGoapGoal goal,
+            IGoapAction[] actions,
+            List<IGoapAction> plan
+        )
         {
             //Arrange:
             AStarPlanner planner = new AStarPlanner();
 
             //Assert:
-            Assert.Catch<ArgumentNullException>(() => { planner.Plan(worldState, goal, actions, out _); });
+            Assert.Catch<ArgumentNullException>(() => planner.Plan(worldState, goal, actions, plan));
         }
 
         private static IEnumerable<TestCaseData> ArgumentNullExceptionCases()
         {
-            yield return new TestCaseData(null, GoalStub, new[] {ActionStub})
+            yield return new TestCaseData(null, GoalStub, new[] {ActionStub}, new List<IGoapAction>())
                 .SetName("World State");
 
-            yield return new TestCaseData(new WorldState(), null, new[] {ActionStub})
+            yield return new TestCaseData(new WorldState(), null, new[] {ActionStub}, new List<IGoapAction>())
                 .SetName("Goal");
 
-            yield return new TestCaseData(new WorldState(), GoalStub, null)
+            yield return new TestCaseData(new WorldState(), GoalStub, null, new List<IGoapAction>())
                 .SetName("Actions");
+            
+            yield return new TestCaseData(new WorldState(), GoalStub, new[] {ActionStub}, null)
+                .SetName("Plan");
+        }
+
+        [Test]
+        public void GetHeuristic()
+        {
+            //Arrange:
+            AStarPlanner planner = new AStarPlanner();
+            WorldState worldState = new WorldState(EnemyExists(true), AtEnemy(false), NearEnemy(false), HasAmmo(false));
+            GoapAction action = new GoapAction(null, null, new LocalState(NearEnemy(true), HasAmmo(true)), null, null);
+
+            //Act:
+            int heuristic = planner.GetHeuristic(worldState, action);
+
+            //Assert:
+            Assert.AreEqual(2, heuristic);
         }
 
         [TestCaseSource(nameof(FailedPlanCases))]
@@ -321,27 +343,23 @@ namespace AI.Goap
         private static TestCaseData RangeCombatWithAmmoCase()
         {
             return new TestCaseData(
-                    
                     new WorldState(
                         EnemyExists(true),
                         AtEnemy(false),
                         NearEnemy(false),
                         HasAmmo(false)
                     ),
-                    
                     new GoapGoal(
                         "Destroy Enemy",
                         isValid: () => true,
                         priority: () => 1,
                         result: EnemyExists(false)
                     ),
-                    
-                    
                     new[]
                     {
                         //Melee branch: weight: 16
-                        
-                        
+
+
                         new GoapAction(
                             "MeleeCombat",
                             effects: new LocalState(EnemyExists(false)),
@@ -349,9 +367,8 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 10 //heuristic: 1
                         ),
-                        
-                        
-                        
+
+
                         new GoapAction(
                             "MoveAtEnemy",
                             effects: new LocalState(AtEnemy(true), NearEnemy(true)),
@@ -359,8 +376,7 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 5 //heuristic: 0
                         ),
-                        
-                        
+
 
                         //Range branch: 9
                         new GoapAction(
@@ -370,8 +386,8 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 1 //heuristic: 2
                         ),
-                        
-                        
+
+
                         new GoapAction(
                             "MoveNearEnemy",
                             effects: new LocalState(NearEnemy(true)),
@@ -379,8 +395,8 @@ namespace AI.Goap
                             isValid: () => true,
                             cost: () => 2 //heuristic: 0
                         ),
-                        
-                        
+
+
                         new GoapAction(
                             "PickUpAmmo",
                             effects: new LocalState(HasAmmo(true)),

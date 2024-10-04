@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Pool;
 
 namespace AI.Goap
@@ -52,6 +53,11 @@ namespace AI.Goap
 
             if (syncState)
                 this.SyncWorldState();
+
+            foreach (var s in worldState)
+            {
+                Debug.Log($"{s.Key} {s.Value}");
+            }
 
             success = this.planner.Plan(this.worldState, goal, actions, plan);
 
